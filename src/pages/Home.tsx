@@ -43,17 +43,17 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section className="container mx-auto -mt-12 px-4">
-        <div className="grid gap-4 md:grid-cols-3">
+      <section className="container mx-auto -mt-10 px-4 pb-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((s) => (
             <div
               key={s.label}
-              className="flex items-center gap-4 rounded-xl border bg-card p-6 shadow-sm"
+              className="flex items-center gap-4 rounded-xl border bg-card p-5 shadow-sm"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent">
                 <s.icon className="h-6 w-6 text-primary" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-2xl font-bold text-foreground">
                   {typeof s.value === "function" ? s.value() : s.value}
                 </p>
@@ -65,7 +65,7 @@ export default function Home() {
       </section>
 
       {/* Why donate */}
-      <section className="container mx-auto px-4 py-20 text-center">
+      <section className="container mx-auto px-4 py-16 text-center">
         <h2 className="font-display text-3xl font-bold text-foreground">Why Donate Blood?</h2>
         <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
           Blood cannot be manufactured — it can only come from generous donors like you.
