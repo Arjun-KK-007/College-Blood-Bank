@@ -65,7 +65,7 @@ export default function Home() {
       </section>
 
       {/* Why donate */}
-      <section className="container mx-auto px-4 py-20 text-center">
+      <section className="container mx-auto px-4 py-16 text-center">
         <h2 className="font-display text-3xl font-bold text-foreground">Why Donate Blood?</h2>
         <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
           Blood cannot be manufactured — it can only come from generous donors like you.
