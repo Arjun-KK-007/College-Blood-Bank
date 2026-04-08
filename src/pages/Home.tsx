@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="gradient-hero relative overflow-hidden px-4 py-24 text-center md:py-32">
+      <section className="gradient-hero relative overflow-hidden px-4 py-24 pb-32 text-center md:py-32 md:pb-40">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_60%)]" />
         <div className="relative container mx-auto max-w-3xl">
           <div className="mb-6 inline-flex animate-float items-center gap-2 rounded-full bg-primary-foreground/10 px-4 py-2 backdrop-blur-sm">
