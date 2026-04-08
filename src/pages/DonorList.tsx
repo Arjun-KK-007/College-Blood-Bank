@@ -1,0 +1,158 @@
+import { useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2, Search } from "lucide-react";
+import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, type Donor } from "@/lib/store";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+export default function DonorList() {
+  const [donors, setDonors] = useState(getDonors);
+  const [search, setSearch] = useState("");
+  const [filterBG, setFilterBG] = useState("all");
+  const admin = isAdmin();
+  const [editDonor, setEditDonor] = useState<Donor | null>(null);
+  const [editForm, setEditForm] = useState({ fullName: "", department: "", year: "", bloodGroup: "", address: "", phone: "" });
+
+  const filtered = useMemo(() => {
+    return donors.filter((d) => {
+      const matchSearch = d.fullName.toLowerCase().includes(search.toLowerCase()) ||
+        d.department.toLowerCase().includes(search.toLowerCase());
+      const matchBG = filterBG === "all" || d.bloodGroup === filterBG;
+      return matchSearch && matchBG;
+    });
+  }, [donors, search, filterBG]);
+
+  const handleDelete = (id: string) => {
+    deleteDonor(id);
+    setDonors(getDonors());
+    toast.success("Donor record deleted");
+  };
+
+  const openEdit = (d: Donor) => {
+    setEditDonor(d);
+    setEditForm({ fullName: d.fullName, department: d.department, year: d.year, bloodGroup: d.bloodGroup, address: d.address, phone: d.phone });
+  };
+
+  const handleEdit = () => {
+    if (!editDonor) return;
+    updateDonor(editDonor.id, editForm);
+    setDonors(getDonors());
+    setEditDonor(null);
+    toast.success("Donor record updated");
+  };
+
+  return (
+    <div className="gradient-soft min-h-[80vh] py-12">
+      <div className="container mx-auto px-4">
+        <h1 className="font-display text-3xl font-bold text-foreground">Donor List</h1>
+        <p className="mt-2 text-muted-foreground">Browse registered blood donors.</p>
+
+        {/* Filters */}
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search by name or department..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+          <Select value={filterBG} onValueChange={setFilterBG}>
+            <SelectTrigger className="w-full sm:w-44">
+              <SelectValue placeholder="Blood Group" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Groups</SelectItem>
+              {BLOOD_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Table */}
+        <div className="mt-6 overflow-x-auto rounded-xl border bg-card shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Year</TableHead>
+                <TableHead>Blood Group</TableHead>
+                <TableHead className="hidden md:table-cell">Address</TableHead>
+                {admin && <TableHead className="text-right">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={admin ? 6 : 5} className="py-12 text-center text-muted-foreground">
+                    No donors found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">{d.fullName}</TableCell>
+                    <TableCell>{d.department}</TableCell>
+                    <TableCell>{d.year}</TableCell>
+                    <TableCell>
+                      <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
+                        {d.bloodGroup}
+                      </span>
+                    </TableCell>
+                    <TableCell className="hidden max-w-[200px] truncate md:table-cell">{d.address}</TableCell>
+                    {admin && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editDonor} onOpenChange={() => setEditDonor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit Donor</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div><Label>Full Name</Label><Input value={editForm.fullName} onChange={(e) => setEditForm(p => ({ ...p, fullName: e.target.value }))} className="mt-1" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Department</Label>
+                <Select value={editForm.department} onValueChange={(v) => setEditForm(p => ({ ...p, department: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Year</Label>
+                <Select value={editForm.year} onValueChange={(v) => setEditForm(p => ({ ...p, year: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div><Label>Blood Group</Label>
+              <Select value={editForm.bloodGroup} onValueChange={(v) => setEditForm(p => ({ ...p, bloodGroup: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>{BLOOD_GROUPS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label>Address</Label><Textarea value={editForm.address} onChange={(e) => setEditForm(p => ({ ...p, address: e.target.value }))} className="mt-1" rows={2} /></div>
+            <div><Label>Phone</Label><Input value={editForm.phone} onChange={(e) => setEditForm(p => ({ ...p, phone: e.target.value }))} className="mt-1" /></div>
+            <Button onClick={handleEdit} className="w-full">Save Changes</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
