@@ -81,7 +81,7 @@ export function isAdmin(): boolean {
 }
 
 export function loginAdmin(username: string, password: string): boolean {
-  if (username === "admin" && password === "bloodbank123") {
+  if (username === "Arjun" && password === "Arjun2007") {
     localStorage.setItem(ADMIN_KEY, "true");
     return true;
   }
