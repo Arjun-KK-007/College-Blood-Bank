@@ -44,9 +44,6 @@ export default function Admin() {
             <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" placeholder="••••••••" /></div>
             <Button type="submit" className="w-full" size="lg">Login</Button>
           </form>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            Default: Arjun / Arjun2007
-          </p>
         </div>
       </div>
     </div>
