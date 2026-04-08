@@ -45,7 +45,7 @@ export default function Admin() {
             <Button type="submit" className="w-full" size="lg">Login</Button>
           </form>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Default: admin / bloodbank123
+            Default: Arjun / Arjun2007
           </p>
         </div>
       </div>
