@@ -43,7 +43,7 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section className="container mx-auto -mt-10 px-4 pb-4">
+      <section className="container mx-auto mt-8 px-4 pb-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {stats.map((s) => (
             <div
