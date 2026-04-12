@@ -3,12 +3,23 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Search } from "lucide-react";
+import { Pencil, Trash2, Search, CalendarDays } from "lucide-react";
 import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, GENDERS, type Donor } from "@/lib/store";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
+function getDaysAgo(dateStr: string): string {
+  if (!dateStr || dateStr === "Never Donated") return "Never Donated";
+  const donated = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - donated.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (days === 0) return "Today";
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
+}
 
 export default function DonorList() {
   const [donors, setDonors] = useState(getDonors);
@@ -17,6 +28,8 @@ export default function DonorList() {
   const admin = isAdmin();
   const [editDonor, setEditDonor] = useState<Donor | null>(null);
   const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", address: "", phone: "" });
+  const [updateDateDonor, setUpdateDateDonor] = useState<Donor | null>(null);
+  const [newLastDonated, setNewLastDonated] = useState("");
 
   const filtered = useMemo(() => {
     return donors.filter((d) => {
@@ -44,6 +57,19 @@ export default function DonorList() {
     setDonors(getDonors());
     setEditDonor(null);
     toast.success("Donor record updated");
+  };
+
+  const openUpdateDate = (d: Donor) => {
+    setUpdateDateDonor(d);
+    setNewLastDonated(d.lastDonated && d.lastDonated !== "Never Donated" ? d.lastDonated : "");
+  };
+
+  const handleUpdateDate = () => {
+    if (!updateDateDonor || !newLastDonated) return;
+    updateDonor(updateDateDonor.id, { ...updateDateDonor, lastDonated: newLastDonated });
+    setDonors(getDonors());
+    setUpdateDateDonor(null);
+    toast.success("Last donation date updated");
   };
 
   return (
@@ -80,18 +106,17 @@ export default function DonorList() {
                 <TableHead>Year</TableHead>
                 <TableHead>Blood Group</TableHead>
                 <TableHead className="hidden md:table-cell">Last Donated</TableHead>
-                {/* Phone & Address visible only to admin for female donors */}
                 {admin && <TableHead className="hidden md:table-cell">Address</TableHead>}
                 {admin && <TableHead className="hidden md:table-cell">Phone</TableHead>}
                 {!admin && <TableHead className="hidden md:table-cell">Address</TableHead>}
                 {!admin && <TableHead className="hidden md:table-cell">Phone</TableHead>}
-                {admin && <TableHead className="text-right">Actions</TableHead>}
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={admin ? 10 : 8} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="py-12 text-center text-muted-foreground">
                     No donors found.
                   </TableCell>
                 </TableRow>
@@ -110,7 +135,14 @@ export default function DonorList() {
                           {d.bloodGroup}
                         </span>
                       </TableCell>
-                      <TableCell className="hidden md:table-cell">{d.lastDonated || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <div>
+                          <span>{d.lastDonated || "—"}</span>
+                          {d.lastDonated && d.lastDonated !== "Never Donated" && (
+                            <span className="ml-1 text-xs text-muted-foreground">({getDaysAgo(d.lastDonated)})</span>
+                          )}
+                        </div>
+                      </TableCell>
                       {admin ? (
                         <>
                           <TableCell className="hidden max-w-[200px] truncate md:table-cell">{d.address || "—"}</TableCell>
@@ -122,18 +154,23 @@ export default function DonorList() {
                           <TableCell className="hidden md:table-cell">{showPrivate ? d.phone : "Hidden"}</TableCell>
                         </>
                       )}
-                      {admin && (
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      )}
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => openUpdateDate(d)} title="Update last donation date">
+                            <CalendarDays className="h-4 w-4" />
+                          </Button>
+                          {admin && (
+                            <>
+                              <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -143,7 +180,25 @@ export default function DonorList() {
         </div>
       </div>
 
-      {/* Edit Dialog */}
+      {/* Update Last Donated Dialog (for any donor) */}
+      <Dialog open={!!updateDateDonor} onOpenChange={() => setUpdateDateDonor(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Update Last Donation Date</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Update the last blood donation date for <strong>{updateDateDonor?.fullName}</strong>.</p>
+            <div>
+              <Label>Last Date Blood Donated</Label>
+              <Input type="date" value={newLastDonated} onChange={(e) => setNewLastDonated(e.target.value)} className="mt-1" />
+            </div>
+            {newLastDonated && (
+              <p className="text-sm text-muted-foreground">That was <strong>{getDaysAgo(newLastDonated)}</strong>.</p>
+            )}
+            <Button onClick={handleUpdateDate} className="w-full" disabled={!newLastDonated}>Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog (admin only) */}
       <Dialog open={!!editDonor} onOpenChange={() => setEditDonor(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Edit Donor</DialogTitle></DialogHeader>
