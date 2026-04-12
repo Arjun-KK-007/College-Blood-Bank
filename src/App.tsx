@@ -9,7 +9,7 @@ import Home from "@/pages/Home";
 import Register from "@/pages/Register";
 import DonorList from "@/pages/DonorList";
 import RequestBlood from "@/pages/RequestBlood";
-import Contact from "@/pages/Contact";
+
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
@@ -29,7 +29,7 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/donors" element={<DonorList />} />
               <Route path="/request" element={<RequestBlood />} />
-              <Route path="/contact" element={<Contact />} />
+              
               <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
