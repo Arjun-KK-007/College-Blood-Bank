@@ -146,7 +146,7 @@ export default function DonorList() {
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <div>
-                          <span>{d.lastDonated || "—"}</span>
+                          <span>{formatDate(d.lastDonated) || "—"}</span>
                           {d.lastDonated && d.lastDonated !== "Never Donated" && (
                             <span className="ml-1 text-xs text-muted-foreground">({getDaysAgo(d.lastDonated)})</span>
                           )}
