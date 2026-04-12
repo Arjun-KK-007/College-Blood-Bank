@@ -9,7 +9,7 @@ const navLinks = [
   { to: "/register", label: "Register" },
   { to: "/donors", label: "Donor List" },
   { to: "/request", label: "Request Blood" },
-  { to: "/contact", label: "Contact" },
+  
 ];
 
 export default function Navbar() {
