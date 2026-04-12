@@ -94,8 +94,17 @@ export default function Register() {
           </div>
 
           <div>
-            <Label htmlFor="lastDonated">Last Date Blood Donated</Label>
-            <Input id="lastDonated" type="date" value={form.lastDonated} onChange={(e) => set("lastDonated", e.target.value)} className="mt-1" />
+            <Label>Last Date Blood Donated</Label>
+            <Select value={form.lastDonated} onValueChange={(v) => set("lastDonated", v)}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="never">Never Donated</SelectItem>
+                <SelectItem value="pick_date">Select a Date</SelectItem>
+              </SelectContent>
+            </Select>
+            {form.lastDonated === "pick_date" && (
+              <Input type="date" value={form.lastDonatedDate || ""} onChange={(e) => set("lastDonatedDate", e.target.value)} className="mt-2" />
+            )}
           </div>
 
           <div>
