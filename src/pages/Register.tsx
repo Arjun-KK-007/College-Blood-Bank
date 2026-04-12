@@ -36,7 +36,12 @@ export default function Register() {
       toast.error("Please fill all required fields");
       return;
     }
-    saveDonor(form);
+    const donorData = {
+      ...form,
+      lastDonated: form.lastDonated === "pick_date" ? form.lastDonatedDate : form.lastDonated === "never" ? "Never Donated" : "",
+    };
+    const { lastDonatedDate, ...dataToSave } = donorData;
+    saveDonor(dataToSave);
     toast.success("Registration successful! Thank you for becoming a donor.");
     navigate("/donors");
   };
