@@ -23,6 +23,7 @@ export default function Register() {
     year: "",
     bloodGroup: "",
     lastDonated: "",
+    lastDonatedDate: "",
     address: "",
     phone: "",
   });
@@ -35,7 +36,12 @@ export default function Register() {
       toast.error("Please fill all required fields");
       return;
     }
-    saveDonor(form);
+    const donorData = {
+      ...form,
+      lastDonated: form.lastDonated === "pick_date" ? form.lastDonatedDate : form.lastDonated === "never" ? "Never Donated" : "",
+    };
+    const { lastDonatedDate, ...dataToSave } = donorData;
+    saveDonor(dataToSave);
     toast.success("Registration successful! Thank you for becoming a donor.");
     navigate("/donors");
   };
@@ -94,8 +100,17 @@ export default function Register() {
           </div>
 
           <div>
-            <Label htmlFor="lastDonated">Last Date Blood Donated</Label>
-            <Input id="lastDonated" type="date" value={form.lastDonated} onChange={(e) => set("lastDonated", e.target.value)} className="mt-1" />
+            <Label>Last Date Blood Donated</Label>
+            <Select value={form.lastDonated} onValueChange={(v) => set("lastDonated", v)}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="never">Never Donated</SelectItem>
+                <SelectItem value="pick_date">Select a Date</SelectItem>
+              </SelectContent>
+            </Select>
+            {form.lastDonated === "pick_date" && (
+              <Input type="date" value={form.lastDonatedDate || ""} onChange={(e) => set("lastDonatedDate", e.target.value)} className="mt-2" />
+            )}
           </div>
 
           <div>
