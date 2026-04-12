@@ -23,6 +23,7 @@ export default function Register() {
     year: "",
     bloodGroup: "",
     lastDonated: "",
+    lastDonatedDate: "",
     address: "",
     phone: "",
   });
