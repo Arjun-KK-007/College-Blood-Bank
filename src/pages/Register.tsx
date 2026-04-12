@@ -12,15 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DEPARTMENTS, BLOOD_GROUPS, YEARS, saveDonor } from "@/lib/store";
+import { DEPARTMENTS, BLOOD_GROUPS, YEARS, GENDERS, saveDonor } from "@/lib/store";
 
 export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: "",
+    gender: "",
     department: "",
     year: "",
     bloodGroup: "",
+    lastDonated: "",
     address: "",
     phone: "",
   });
@@ -29,7 +31,7 @@ export default function Register() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.fullName || !form.department || !form.year || !form.bloodGroup || !form.phone) {
+    if (!form.fullName || !form.gender || !form.department || !form.year || !form.bloodGroup || !form.phone) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -48,6 +50,16 @@ export default function Register() {
           <div>
             <Label htmlFor="fullName">Full Name *</Label>
             <Input id="fullName" value={form.fullName} onChange={(e) => set("fullName", e.target.value)} placeholder="John Doe" className="mt-1" />
+          </div>
+
+          <div>
+            <Label>Gender *</Label>
+            <Select value={form.gender} onValueChange={(v) => set("gender", v)}>
+              <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                {GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -79,6 +91,11 @@ export default function Register() {
                 {BLOOD_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="lastDonated">Last Date Blood Donated</Label>
+            <Input id="lastDonated" type="date" value={form.lastDonated} onChange={(e) => set("lastDonated", e.target.value)} className="mt-1" />
           </div>
 
           <div>

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Search } from "lucide-react";
-import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, type Donor } from "@/lib/store";
+import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, GENDERS, type Donor } from "@/lib/store";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ export default function DonorList() {
   const [filterBG, setFilterBG] = useState("all");
   const admin = isAdmin();
   const [editDonor, setEditDonor] = useState<Donor | null>(null);
-  const [editForm, setEditForm] = useState({ fullName: "", department: "", year: "", bloodGroup: "", address: "", phone: "" });
+  const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", address: "", phone: "" });
 
   const filtered = useMemo(() => {
     return donors.filter((d) => {
@@ -35,7 +35,7 @@ export default function DonorList() {
 
   const openEdit = (d: Donor) => {
     setEditDonor(d);
-    setEditForm({ fullName: d.fullName, department: d.department, year: d.year, bloodGroup: d.bloodGroup, address: d.address, phone: d.phone });
+    setEditForm({ fullName: d.fullName, gender: d.gender || "", department: d.department, year: d.year, bloodGroup: d.bloodGroup, lastDonated: d.lastDonated || "", address: d.address, phone: d.phone });
   };
 
   const handleEdit = () => {
@@ -75,46 +75,68 @@ export default function DonorList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Gender</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Year</TableHead>
                 <TableHead>Blood Group</TableHead>
-                <TableHead className="hidden md:table-cell">Address</TableHead>
+                <TableHead className="hidden md:table-cell">Last Donated</TableHead>
+                {/* Phone & Address visible only to admin for female donors */}
+                {admin && <TableHead className="hidden md:table-cell">Address</TableHead>}
+                {admin && <TableHead className="hidden md:table-cell">Phone</TableHead>}
+                {!admin && <TableHead className="hidden md:table-cell">Address</TableHead>}
+                {!admin && <TableHead className="hidden md:table-cell">Phone</TableHead>}
                 {admin && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={admin ? 6 : 5} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={admin ? 10 : 8} className="py-12 text-center text-muted-foreground">
                     No donors found.
                   </TableCell>
                 </TableRow>
               ) : (
-                filtered.map((d) => (
-                  <TableRow key={d.id}>
-                    <TableCell className="font-medium">{d.fullName}</TableCell>
-                    <TableCell>{d.department}</TableCell>
-                    <TableCell>{d.year}</TableCell>
-                    <TableCell>
-                      <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
-                        {d.bloodGroup}
-                      </span>
-                    </TableCell>
-                    <TableCell className="hidden max-w-[200px] truncate md:table-cell">{d.address}</TableCell>
-                    {admin && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                filtered.map((d) => {
+                  const isFemale = d.gender === "Female";
+                  const showPrivate = admin || !isFemale;
+                  return (
+                    <TableRow key={d.id}>
+                      <TableCell className="font-medium">{d.fullName}</TableCell>
+                      <TableCell>{d.gender || "—"}</TableCell>
+                      <TableCell>{d.department}</TableCell>
+                      <TableCell>{d.year}</TableCell>
+                      <TableCell>
+                        <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
+                          {d.bloodGroup}
+                        </span>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))
+                      <TableCell className="hidden md:table-cell">{d.lastDonated || "—"}</TableCell>
+                      {admin ? (
+                        <>
+                          <TableCell className="hidden max-w-[200px] truncate md:table-cell">{d.address || "—"}</TableCell>
+                          <TableCell className="hidden md:table-cell">{d.phone}</TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className="hidden max-w-[200px] truncate md:table-cell">{showPrivate ? (d.address || "—") : "Hidden"}</TableCell>
+                          <TableCell className="hidden md:table-cell">{showPrivate ? d.phone : "Hidden"}</TableCell>
+                        </>
+                      )}
+                      {admin && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -127,6 +149,12 @@ export default function DonorList() {
           <DialogHeader><DialogTitle>Edit Donor</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Full Name</Label><Input value={editForm.fullName} onChange={(e) => setEditForm(p => ({ ...p, fullName: e.target.value }))} className="mt-1" /></div>
+            <div><Label>Gender</Label>
+              <Select value={editForm.gender} onValueChange={(v) => setEditForm(p => ({ ...p, gender: v }))}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Department</Label>
                 <Select value={editForm.department} onValueChange={(v) => setEditForm(p => ({ ...p, department: v }))}>
@@ -147,6 +175,7 @@ export default function DonorList() {
                 <SelectContent>{BLOOD_GROUPS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div><Label>Last Date Blood Donated</Label><Input type="date" value={editForm.lastDonated} onChange={(e) => setEditForm(p => ({ ...p, lastDonated: e.target.value }))} className="mt-1" /></div>
             <div><Label>Address</Label><Textarea value={editForm.address} onChange={(e) => setEditForm(p => ({ ...p, address: e.target.value }))} className="mt-1" rows={2} /></div>
             <div><Label>Phone</Label><Input value={editForm.phone} onChange={(e) => setEditForm(p => ({ ...p, phone: e.target.value }))} className="mt-1" /></div>
             <Button onClick={handleEdit} className="w-full">Save Changes</Button>
