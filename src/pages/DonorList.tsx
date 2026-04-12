@@ -10,6 +10,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+function formatDate(dateStr: string): string {
+  if (!dateStr || dateStr === "Never Donated") return "Never Donated";
+  const d = new Date(dateStr);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
 function getDaysAgo(dateStr: string): string {
   if (!dateStr || dateStr === "Never Donated") return "Never Donated";
   const donated = new Date(dateStr);
@@ -137,7 +146,7 @@ export default function DonorList() {
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         <div>
-                          <span>{d.lastDonated || "—"}</span>
+                          <span>{formatDate(d.lastDonated) || "—"}</span>
                           {d.lastDonated && d.lastDonated !== "Never Donated" && (
                             <span className="ml-1 text-xs text-muted-foreground">({getDaysAgo(d.lastDonated)})</span>
                           )}
