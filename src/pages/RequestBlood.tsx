@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, isAdmin } from "@/lib/store";
 import { Trash2, AlertTriangle } from "lucide-react";
@@ -11,7 +10,7 @@ import { Trash2, AlertTriangle } from "lucide-react";
 export default function RequestBlood() {
   const [requests, setRequests] = useState(getRequests);
   const admin = isAdmin();
-  const [form, setForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", message: "" });
+  const [form, setForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,7 +21,7 @@ export default function RequestBlood() {
     }
     saveRequest(form);
     setRequests(getRequests());
-    setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", message: "" });
+    setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
     toast.success("Blood request submitted!");
   };
 
@@ -61,7 +60,8 @@ export default function RequestBlood() {
               </div>
             </div>
             <div><Label>Phone *</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+91 98765 43210" className="mt-1" /></div>
-            <div><Label>Additional Message</Label><Textarea value={form.message} onChange={(e) => set("message", e.target.value)} placeholder="Any details..." className="mt-1" rows={3} /></div>
+            <div><Label>Hospital Name</Label><Input value={form.hospitalName} onChange={(e) => set("hospitalName", e.target.value)} placeholder="City General Hospital" className="mt-1" /></div>
+            <div><Label>Hospital Location</Label><Input value={form.hospitalLocation} onChange={(e) => set("hospitalLocation", e.target.value)} placeholder="123 Main Street, City" className="mt-1" /></div>
             <Button type="submit" className="w-full" size="lg">Submit Request</Button>
           </form>
 
@@ -89,7 +89,8 @@ export default function RequestBlood() {
                     </div>
                     <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
                     <p className="text-sm text-muted-foreground">{r.phone}</p>
-                    {r.message && <p className="mt-1 text-sm text-muted-foreground">{r.message}</p>}
+                    {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
+                    {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
                   </div>
                 ))}
               </div>

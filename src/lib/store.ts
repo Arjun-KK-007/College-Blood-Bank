@@ -1,9 +1,11 @@
 export interface Donor {
   id: string;
   fullName: string;
+  gender: string;
   department: string;
   year: string;
   bloodGroup: string;
+  lastDonated: string;
   address: string;
   phone: string;
   createdAt: string;
@@ -15,7 +17,8 @@ export interface BloodRequest {
   bloodGroup: string;
   phone: string;
   urgency: string;
-  message: string;
+  hospitalName: string;
+  hospitalLocation: string;
   createdAt: string;
 }
 
@@ -105,3 +108,4 @@ export const DEPARTMENTS = [
 
 export const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 export const YEARS = ["1st", "2nd", "3rd", "4th"];
+export const GENDERS = ["Male", "Female", "Other"];
