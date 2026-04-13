@@ -27,9 +27,9 @@ export default function Home() {
             A single donation can save up to three lives. Join our campus community of
             life-savers and register as a blood donor today.
           </p>
-          <div className="mt-8 flex justify-center gap-4">
+          <div className="mt-8 flex flex-col items-center gap-3">
             <Link to="/request">
-              <Button size="lg" variant="outline" className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 font-semibold">
+              <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold">
                 Request Blood
               </Button>
             </Link>
