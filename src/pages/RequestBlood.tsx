@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, isAdmin } from "@/lib/store";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, isAdmin, getDonors } from "@/lib/store";
 import { Trash2, AlertTriangle } from "lucide-react";
 
 export default function RequestBlood() {
@@ -21,8 +21,19 @@ export default function RequestBlood() {
     }
     saveRequest(form);
     setRequests(getRequests());
+
+    // Notify matching donors
+    const matchingDonors = getDonors().filter(d => d.bloodGroup === form.bloodGroup);
+    if (matchingDonors.length > 0) {
+      matchingDonors.forEach(donor => {
+        toast.info(`🔔 Notification sent to ${donor.fullName} (${donor.bloodGroup})`, { duration: 5000 });
+      });
+      toast.success(`Blood request submitted! ${matchingDonors.length} matching donor(s) notified.`);
+    } else {
+      toast.success("Blood request submitted! No matching donors found currently.");
+    }
+
     setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
-    toast.success("Blood request submitted!");
   };
 
   const handleDelete = (id: string) => {
@@ -73,24 +84,25 @@ export default function RequestBlood() {
             ) : (
               <div className="space-y-3">
                 {requests.map((r) => (
-                  <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-accent-foreground">{r.bloodGroup}</span>
-                        {r.urgency === "Critical" && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                        {r.urgency === "Urgent" && <AlertTriangle className="h-4 w-4 text-primary" />}
-                        <span className="text-xs text-muted-foreground">{r.urgency}</span>
-                      </div>
-                      {admin && (
-                        <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
-                    <p className="text-sm text-muted-foreground">{r.phone}</p>
-                    {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
-                    {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
+                   <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                     <div className="flex items-start justify-between">
+                       <div className="flex items-center gap-2">
+                         <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-accent-foreground">{r.bloodGroup}</span>
+                         {r.urgency === "Critical" && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                         {r.urgency === "Urgent" && <AlertTriangle className="h-4 w-4 text-primary" />}
+                         <span className="text-xs text-muted-foreground">{r.urgency}</span>
+                       </div>
+                       {admin && (
+                         <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
+                           <Trash2 className="h-4 w-4" />
+                         </Button>
+                       )}
+                     </div>
+                     <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
+                     <p className="text-sm text-muted-foreground">{r.phone}</p>
+                     <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
+                     {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
+                     {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
                   </div>
                 ))}
               </div>
