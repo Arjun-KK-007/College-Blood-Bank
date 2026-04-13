@@ -4,14 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, isAdmin, getDonors } from "@/lib/store";
-import { Trash2, AlertTriangle } from "lucide-react";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, isAdmin, getDonors, type Donor } from "@/lib/store";
+import { Trash2, AlertTriangle, MessageSquare, Phone } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+function cleanPhone(phone: string): string {
+  return phone.replace(/[\s\-()]/g, "");
+}
+
+function buildMessage(request: { requesterName: string; bloodGroup: string; urgency: string; hospitalName: string; hospitalLocation: string; phone: string }): string {
+  let msg = `🩸 Urgent Blood Request!\n\nBlood Group Needed: ${request.bloodGroup}\nRequested by: ${request.requesterName}\nUrgency: ${request.urgency}\nContact: ${request.phone}`;
+  if (request.hospitalName) msg += `\nHospital: ${request.hospitalName}`;
+  if (request.hospitalLocation) msg += `\nLocation: ${request.hospitalLocation}`;
+  msg += `\n\nPlease respond if you can donate. Every drop counts! 🙏`;
+  return msg;
+}
 
 export default function RequestBlood() {
   const [requests, setRequests] = useState(getRequests);
   const admin = isAdmin();
   const [form, setForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,13 +36,10 @@ export default function RequestBlood() {
     saveRequest(form);
     setRequests(getRequests());
 
-    // Notify matching donors
-    const matchingDonors = getDonors().filter(d => d.bloodGroup === form.bloodGroup);
-    if (matchingDonors.length > 0) {
-      matchingDonors.forEach(donor => {
-        toast.info(`🔔 Notification sent to ${donor.fullName} (${donor.bloodGroup})`, { duration: 5000 });
-      });
-      toast.success(`Blood request submitted! ${matchingDonors.length} matching donor(s) notified.`);
+    const donors = getDonors().filter(d => d.bloodGroup === form.bloodGroup);
+    if (donors.length > 0) {
+      setMatchingDonors({ donors, request: { ...form } });
+      toast.success(`Blood request submitted! ${donors.length} matching donor(s) found.`);
     } else {
       toast.success("Blood request submitted! No matching donors found currently.");
     }
@@ -40,6 +51,35 @@ export default function RequestBlood() {
     deleteRequest(id);
     setRequests(getRequests());
     toast.success("Request removed");
+  };
+
+  const sendSMS = (donorPhone: string) => {
+    if (!matchingDonors) return;
+    const phone = cleanPhone(donorPhone);
+    const msg = buildMessage(matchingDonors.request);
+    window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const sendWhatsApp = (donorPhone: string) => {
+    if (!matchingDonors) return;
+    const phone = cleanPhone(donorPhone);
+    const msg = buildMessage(matchingDonors.request);
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const notifyAll = (method: "sms" | "whatsapp") => {
+    if (!matchingDonors) return;
+    const msg = buildMessage(matchingDonors.request);
+    const phones = matchingDonors.donors.map(d => cleanPhone(d.phone)).filter(Boolean);
+    if (method === "sms") {
+      window.open(`sms:${phones.join(",")}?body=${encodeURIComponent(msg)}`, "_blank");
+    } else {
+      // WhatsApp doesn't support multiple recipients natively, open first one
+      if (phones.length > 0) {
+        window.open(`https://wa.me/${phones[0]}?text=${encodeURIComponent(msg)}`, "_blank");
+        toast.info("WhatsApp supports one contact at a time. Send to others individually.");
+      }
+    }
   };
 
   return (
@@ -83,33 +123,88 @@ export default function RequestBlood() {
               <div className="rounded-xl border bg-card p-8 text-center text-muted-foreground">No active requests.</div>
             ) : (
               <div className="space-y-3">
-                {requests.map((r) => (
-                   <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm">
-                     <div className="flex items-start justify-between">
-                       <div className="flex items-center gap-2">
-                         <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-accent-foreground">{r.bloodGroup}</span>
-                         {r.urgency === "Critical" && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                         {r.urgency === "Urgent" && <AlertTriangle className="h-4 w-4 text-primary" />}
-                         <span className="text-xs text-muted-foreground">{r.urgency}</span>
-                       </div>
-                       {admin && (
-                         <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
-                           <Trash2 className="h-4 w-4" />
-                         </Button>
-                       )}
-                     </div>
-                     <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
-                     <p className="text-sm text-muted-foreground">{r.phone}</p>
-                     <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
-                     {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
-                     {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
-                  </div>
-                ))}
+                {requests.map((r) => {
+                  const donors = getDonors().filter(d => d.bloodGroup === r.bloodGroup);
+                  return (
+                    <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-accent-foreground">{r.bloodGroup}</span>
+                          {r.urgency === "Critical" && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                          {r.urgency === "Urgent" && <AlertTriangle className="h-4 w-4 text-primary" />}
+                          <span className="text-xs text-muted-foreground">{r.urgency}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {donors.length > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs"
+                              onClick={() => setMatchingDonors({ donors, request: { requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency, hospitalName: r.hospitalName, hospitalLocation: r.hospitalLocation } })}
+                            >
+                              <Phone className="mr-1 h-3 w-3" /> Notify ({donors.length})
+                            </Button>
+                          )}
+                          {admin && (
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
+                      <p className="text-sm text-muted-foreground">{r.phone}</p>
+                      <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
+                      {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
+                      {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Matching Donors Dialog */}
+      <Dialog open={!!matchingDonors} onOpenChange={() => setMatchingDonors(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Matching Donors ({matchingDonors?.request.bloodGroup})</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Send a message to matching donors via SMS or WhatsApp.</p>
+
+          {matchingDonors && matchingDonors.donors.length > 1 && (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="flex-1" onClick={() => notifyAll("sms")}>
+                <MessageSquare className="mr-1 h-4 w-4" /> SMS All
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-600 hover:bg-green-50" onClick={() => notifyAll("whatsapp")}>
+                <MessageSquare className="mr-1 h-4 w-4" /> WhatsApp All
+              </Button>
+            </div>
+          )}
+
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {matchingDonors?.donors.map((donor) => (
+              <div key={donor.id} className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
+                  <p className="text-xs text-muted-foreground">{donor.phone}</p>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => sendSMS(donor.phone)} title="Send SMS">
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => sendWhatsApp(donor.phone)} title="Send WhatsApp">
+                    <Phone className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
