@@ -257,10 +257,8 @@ export default function RequestBlood() {
                         <WhatsAppIcon className="h-4 w-4" />
                       </Button>
                     </div>
-                  )}
-                    </Button>
-                  </div>
                 </div>
+              );
               );
             })}
           </div>
