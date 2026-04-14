@@ -62,22 +62,10 @@ export default function RequestBlood() {
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
   const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
 
-  const autoNotifyDonors = (donors: Donor[], request: typeof form) => {
-    const msg = buildMessage(request);
-    const eligibleDonors = donors.filter(isEligibleDonor);
-    
-    eligibleDonors.forEach(donor => {
-      const phone = cleanPhone(donor.phone);
-      if (phone) {
-        // Auto-open SMS
-        window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_blank");
-        // Auto-open WhatsApp
-        setTimeout(() => {
-          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-        }, 500);
-        toast.info(`🔔 Notification sent to ${donor.fullName} (${donor.bloodGroup})`);
-      }
-    });
+  const getDaysUntilEligible = (donor: Donor): number => {
+    const days = getDaysSinceLastDonation(donor);
+    if (days === null) return 0;
+    return Math.max(0, 100 - days);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
