@@ -255,6 +255,7 @@ export default function RequestBlood() {
                       </Button>
                       <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => sendWhatsApp(donor.phone)} title="Send WhatsApp">
                         <WhatsAppIcon className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                 </div>
