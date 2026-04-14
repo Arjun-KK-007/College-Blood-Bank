@@ -62,22 +62,10 @@ export default function RequestBlood() {
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
   const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
 
-  const autoNotifyDonors = (donors: Donor[], request: typeof form) => {
-    const msg = buildMessage(request);
-    const eligibleDonors = donors.filter(isEligibleDonor);
-    
-    eligibleDonors.forEach(donor => {
-      const phone = cleanPhone(donor.phone);
-      if (phone) {
-        // Auto-open SMS
-        window.open(`sms:${phone}?body=${encodeURIComponent(msg)}`, "_blank");
-        // Auto-open WhatsApp
-        setTimeout(() => {
-          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
-        }, 500);
-        toast.info(`🔔 Notification sent to ${donor.fullName} (${donor.bloodGroup})`);
-      }
-    });
+  const getDaysUntilEligible = (donor: Donor): number => {
+    const days = getDaysSinceLastDonation(donor);
+    if (days === null) return 0;
+    return Math.max(0, 100 - days);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -95,7 +83,7 @@ export default function RequestBlood() {
 
     if (eligibleDonors.length > 0) {
       setMatchingDonors({ donors: sortedDonors, request: { ...form } });
-      autoNotifyDonors(sortedDonors, form);
+      toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) found. You can notify them manually.`);
       toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) notified.`);
     } else if (donors.length > 0) {
       setMatchingDonors({ donors: sortedDonors, request: { ...form } });
@@ -250,23 +238,26 @@ export default function RequestBlood() {
             {matchingDonors?.donors.map((donor) => {
               const days = getDaysSinceLastDonation(donor);
               const eligible = isEligibleDonor(donor);
+              const daysUntil = getDaysUntilEligible(donor);
               return (
-                <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-50' : ''}`}>
+                <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-60' : ''}`}>
                   <div>
                     <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
                     <p className="text-xs text-muted-foreground">{donor.phone}</p>
                     <p className="text-xs text-muted-foreground">
-                      {days === null ? "Never donated ✅" : `${days} days ago ${eligible ? '✅' : '❌ (too recent)'}`}
+                      {days === null ? "Never donated ✅" : eligible ? `${days} days ago ✅` : `❌ Can donate after ${daysUntil} days`}
                     </p>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => sendSMS(donor.phone)} title="Send SMS">
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => sendWhatsApp(donor.phone)} title="Send WhatsApp">
-                      <WhatsAppIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {eligible && (
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => sendSMS(donor.phone)} title="Send SMS">
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => sendWhatsApp(donor.phone)} title="Send WhatsApp">
+                        <WhatsAppIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })}
