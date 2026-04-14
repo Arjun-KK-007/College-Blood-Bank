@@ -21,7 +21,7 @@ function buildMessage(request: { requesterName: string; bloodGroup: string; urge
 }
 
 function getDaysSinceLastDonation(donor: Donor): number | null {
-  if (!donor.lastDonated || donor.lastDonated === "Never") return null;
+  if (!donor.lastDonated || donor.lastDonated === "Never" || donor.lastDonated === "Never Donated") return null;
   const diff = Date.now() - new Date(donor.lastDonated).getTime();
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
