@@ -83,7 +83,7 @@ export default function RequestBlood() {
 
     if (eligibleDonors.length > 0) {
       setMatchingDonors({ donors: sortedDonors, request: { ...form } });
-      autoNotifyDonors(sortedDonors, form);
+      toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) found. You can notify them manually.`);
       toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) notified.`);
     } else if (donors.length > 0) {
       setMatchingDonors({ donors: sortedDonors, request: { ...form } });
