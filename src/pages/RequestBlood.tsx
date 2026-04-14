@@ -243,7 +243,8 @@ export default function RequestBlood() {
                 <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-60' : ''}`}>
                   <div>
                     <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
-                    <p className="text-xs text-muted-foreground">{donor.phone}</p>
+                    <p className="text-xs text-muted-foreground">{donor.gender} • {donor.phone}</p>
+                    {donor.address && <p className="text-xs text-muted-foreground">📍 {donor.address}</p>}
                     <p className="text-xs text-muted-foreground">
                       {eligible ? "✅ Can donate" : `❌ Can donate after ${daysUntil} days`}
                     </p>
