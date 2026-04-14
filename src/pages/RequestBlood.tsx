@@ -238,21 +238,26 @@ export default function RequestBlood() {
             {matchingDonors?.donors.map((donor) => {
               const days = getDaysSinceLastDonation(donor);
               const eligible = isEligibleDonor(donor);
+              const daysUntil = getDaysUntilEligible(donor);
               return (
-                <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-50' : ''}`}>
+                <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-60' : ''}`}>
                   <div>
                     <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
                     <p className="text-xs text-muted-foreground">{donor.phone}</p>
                     <p className="text-xs text-muted-foreground">
-                      {days === null ? "Never donated ✅" : `${days} days ago ${eligible ? '✅' : '❌ (too recent)'}`}
+                      {days === null ? "Never donated ✅" : eligible ? `${days} days ago ✅` : `❌ Can donate after ${daysUntil} days`}
                     </p>
                   </div>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => sendSMS(donor.phone)} title="Send SMS">
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => sendWhatsApp(donor.phone)} title="Send WhatsApp">
-                      <WhatsAppIcon className="h-4 w-4" />
+                  {eligible && (
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => sendSMS(donor.phone)} title="Send SMS">
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-green-600 hover:text-green-700" onClick={() => sendWhatsApp(donor.phone)} title="Send WhatsApp">
+                        <WhatsAppIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                     </Button>
                   </div>
                 </div>
