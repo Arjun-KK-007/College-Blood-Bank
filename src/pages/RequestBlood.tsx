@@ -245,7 +245,7 @@ export default function RequestBlood() {
                     <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
                     <p className="text-xs text-muted-foreground">{donor.phone}</p>
                     <p className="text-xs text-muted-foreground">
-                      {days === null ? "Never donated ✅" : eligible ? `${days} days ago ✅` : `❌ Can donate after ${daysUntil} days`}
+                      {eligible ? "✅ Can donate" : `❌ Can donate after ${daysUntil} days`}
                     </p>
                   </div>
                   {eligible && (
