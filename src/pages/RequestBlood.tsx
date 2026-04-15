@@ -63,7 +63,6 @@ export default function RequestBlood() {
   const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
   const [donatingId, setDonatingId] = useState<string | null>(null);
   const [donatedDate, setDonatedDate] = useState("");
-  const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
 
   const getDaysUntilEligible = (donor: Donor): number => {
     const days = getDaysSinceLastDonation(donor);
