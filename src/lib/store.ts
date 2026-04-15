@@ -20,6 +20,8 @@ export interface BloodRequest {
   hospitalName: string;
   hospitalLocation: string;
   createdAt: string;
+  donated?: boolean;
+  donatedDate?: string;
 }
 
 const DONORS_KEY = "bloodbank_donors";
