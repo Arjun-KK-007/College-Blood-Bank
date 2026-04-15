@@ -20,6 +20,8 @@ export interface BloodRequest {
   hospitalName: string;
   hospitalLocation: string;
   createdAt: string;
+  donated?: boolean;
+  donatedDate?: string;
 }
 
 const DONORS_KEY = "bloodbank_donors";
@@ -77,6 +79,16 @@ export function saveRequest(req: Omit<BloodRequest, "id" | "createdAt">): BloodR
 export function deleteRequest(id: string): void {
   const requests = getRequests().filter((r) => r.id !== id);
   localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
+}
+
+export function markRequestDonated(id: string, donatedDate: string): void {
+  const requests = getRequests();
+  const idx = requests.findIndex((r) => r.id === id);
+  if (idx !== -1) {
+    requests[idx].donated = true;
+    requests[idx].donatedDate = donatedDate;
+    localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
+  }
 }
 
 export function isAdmin(): boolean {
