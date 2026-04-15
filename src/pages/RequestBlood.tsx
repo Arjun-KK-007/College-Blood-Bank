@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, isAdmin, getDonors, type Donor } from "@/lib/store";
-import { Trash2, AlertTriangle, MessageSquare, Phone } from "lucide-react";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, type Donor } from "@/lib/store";
+import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 function cleanPhone(phone: string): string {
