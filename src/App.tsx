@@ -9,7 +9,7 @@ import Home from "@/pages/Home";
 import Register from "@/pages/Register";
 import DonorList from "@/pages/DonorList";
 import RequestBlood from "@/pages/RequestBlood";
-
+import RequestBloodStandalone from "@/pages/RequestBloodStandalone";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 

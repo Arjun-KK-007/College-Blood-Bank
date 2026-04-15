@@ -61,6 +61,9 @@ export default function RequestBlood() {
   const [form, setForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
   const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
+  const [donatingId, setDonatingId] = useState<string | null>(null);
+  const [donatedDate, setDonatedDate] = useState("");
+  const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
 
   const getDaysUntilEligible = (donor: Donor): number => {
     const days = getDaysSinceLastDonation(donor);
@@ -99,6 +102,18 @@ export default function RequestBlood() {
     deleteRequest(id);
     setRequests(getRequests());
     toast.success("Request removed");
+  };
+
+  const handleMarkDonated = (id: string) => {
+    if (!donatedDate) {
+      toast.error("Please select a donated date");
+      return;
+    }
+    markRequestDonated(id, donatedDate);
+    setRequests(getRequests());
+    setDonatingId(null);
+    setDonatedDate("");
+    toast.success("Marked as blood donated!");
   };
 
   const sendSMS = (donorPhone: string) => {
@@ -175,16 +190,17 @@ export default function RequestBlood() {
                   const donors = sortDonorsByEligibility(getDonors().filter(d => d.bloodGroup === r.bloodGroup));
                   const eligibleCount = donors.filter(isEligibleDonor).length;
                   return (
-                    <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm">
+                    <div key={r.id} className={`rounded-xl border bg-card p-4 shadow-sm transition-opacity ${r.donated ? 'opacity-50' : ''}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
                           <span className="inline-block rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-accent-foreground">{r.bloodGroup}</span>
                           {r.urgency === "Critical" && <AlertTriangle className="h-4 w-4 text-destructive" />}
                           {r.urgency === "Urgent" && <AlertTriangle className="h-4 w-4 text-primary" />}
                           <span className="text-xs text-muted-foreground">{r.urgency}</span>
+                          {r.donated && <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"><CheckCircle2 className="h-3 w-3" /> Donated</span>}
                         </div>
                         <div className="flex items-center gap-1">
-                          {donors.length > 0 && (
+                          {!r.donated && donors.length > 0 && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -194,6 +210,16 @@ export default function RequestBlood() {
                               <Phone className="mr-1 h-3 w-3" /> Notify ({eligibleCount}/{donors.length})
                             </Button>
                           )}
+                          {!r.donated && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs text-primary border-primary/30 hover:bg-primary/10"
+                              onClick={() => { setDonatingId(r.id); setDonatedDate(new Date().toISOString().split("T")[0]); }}
+                            >
+                              <CheckCircle2 className="mr-1 h-3 w-3" /> Mark Donated
+                            </Button>
+                          )}
                           {admin && (
                             <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
                               <Trash2 className="h-4 w-4" />
@@ -201,11 +227,20 @@ export default function RequestBlood() {
                           )}
                         </div>
                       </div>
+                      {donatingId === r.id && (
+                        <div className="mt-3 flex items-center gap-2 rounded-lg border bg-muted/50 p-3">
+                          <Label className="text-xs whitespace-nowrap">Donated Date:</Label>
+                          <Input type="date" value={donatedDate} onChange={(e) => setDonatedDate(e.target.value)} className="h-8 text-xs w-auto" />
+                          <Button size="sm" className="h-8 text-xs" onClick={() => handleMarkDonated(r.id)}>Confirm</Button>
+                          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setDonatingId(null); setDonatedDate(""); }}>Cancel</Button>
+                        </div>
+                      )}
                       <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
                       <p className="text-sm text-muted-foreground">{r.phone}</p>
                       <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
                       {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
                       {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
+                      {r.donated && r.donatedDate && <p className="mt-1 text-xs text-primary font-medium">✅ Blood donated on {new Date(r.donatedDate).toLocaleDateString("en-GB")}</p>}
                     </div>
                   );
                 })}
