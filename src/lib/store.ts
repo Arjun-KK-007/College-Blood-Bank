@@ -81,6 +81,16 @@ export function deleteRequest(id: string): void {
   localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
 }
 
+export function markRequestDonated(id: string, donatedDate: string): void {
+  const requests = getRequests();
+  const idx = requests.findIndex((r) => r.id === id);
+  if (idx !== -1) {
+    requests[idx].donated = true;
+    requests[idx].donatedDate = donatedDate;
+    localStorage.setItem(REQUESTS_KEY, JSON.stringify(requests));
+  }
+}
+
 export function isAdmin(): boolean {
   return localStorage.getItem(ADMIN_KEY) === "true";
 }
