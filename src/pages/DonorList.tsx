@@ -3,12 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Search, CalendarDays } from "lucide-react";
+import { Pencil, Trash2, CalendarDays } from "lucide-react";
 import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, GENDERS, type Donor } from "@/lib/store";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
 function formatDate(dateStr: string): string {
   if (!dateStr || dateStr === "Never Donated") return "Never Donated";
@@ -32,19 +31,23 @@ function getDaysAgo(dateStr: string): string {
 
 function getCityFromAddress(address: string): string {
   if (!address) return "";
-  const words = address.trim().split(/[\s,]+/).filter(Boolean);
-  if (words.length < 2) return words[0] || "";
-  return words[words.length - 2];
+  const parts = address.split(",").map(p => p.trim());
+  return parts[2] || "";
+}
+
+function getDistrictFromAddress(address: string): string {
+  if (!address) return "";
+  const parts = address.split(",").map(p => p.trim());
+  return parts[3] || "";
 }
 
 export default function DonorList() {
   const [donors, setDonors] = useState(getDonors);
-  const [search, setSearch] = useState("");
   const [filterBG, setFilterBG] = useState("all");
   const [sortCity, setSortCity] = useState("all");
   const admin = isAdmin();
   const [editDonor, setEditDonor] = useState<Donor | null>(null);
-  const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", address: "", phone: "" });
+  const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", doorNo: "", area: "", city: "", district: "", phone: "" });
   const [updateDateDonor, setUpdateDateDonor] = useState<Donor | null>(null);
   const [newLastDonated, setNewLastDonated] = useState("");
 
@@ -59,12 +62,11 @@ export default function DonorList() {
 
   const filtered = useMemo(() => {
     return donors.filter((d) => {
-      const matchSearch = d.fullName.toLowerCase().includes(search.toLowerCase());
       const matchBG = filterBG === "all" || d.bloodGroup === filterBG;
       const matchCity = sortCity === "all" || getCityFromAddress(d.address).toLowerCase() === sortCity.toLowerCase();
-      return matchSearch && matchBG && matchCity;
+      return matchBG && matchCity;
     });
-  }, [donors, search, filterBG, sortCity]);
+  }, [donors, filterBG, sortCity]);
 
   const handleDelete = (id: string) => {
     deleteDonor(id);
@@ -74,12 +76,14 @@ export default function DonorList() {
 
   const openEdit = (d: Donor) => {
     setEditDonor(d);
-    setEditForm({ fullName: d.fullName, gender: d.gender || "", department: d.department, year: d.year, bloodGroup: d.bloodGroup, lastDonated: d.lastDonated || "", address: d.address, phone: d.phone });
+    const parts = (d.address || "").split(",").map(p => p.trim());
+    setEditForm({ fullName: d.fullName, gender: d.gender || "", department: d.department, year: d.year, bloodGroup: d.bloodGroup, lastDonated: d.lastDonated || "", doorNo: parts[0] || "", area: parts[1] || "", city: parts[2] || "", district: parts[3] || "", phone: d.phone });
   };
 
   const handleEdit = () => {
     if (!editDonor) return;
-    updateDonor(editDonor.id, editForm);
+    const address = [editForm.doorNo, editForm.area, editForm.city, editForm.district].filter(Boolean).join(", ");
+    updateDonor(editDonor.id, { fullName: editForm.fullName, gender: editForm.gender, department: editForm.department, year: editForm.year, bloodGroup: editForm.bloodGroup, lastDonated: editForm.lastDonated, address, phone: editForm.phone });
     setDonors(getDonors());
     setEditDonor(null);
     toast.success("Donor record updated");
