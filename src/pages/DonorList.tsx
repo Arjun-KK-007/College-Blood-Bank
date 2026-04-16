@@ -110,10 +110,6 @@ export default function DonorList() {
 
         {/* Filters */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search by name..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
           <Select value={filterBG} onValueChange={setFilterBG}>
             <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Blood Group" />
@@ -270,7 +266,12 @@ export default function DonorList() {
               </Select>
             </div>
             <div><Label>Last Date Blood Donated</Label><Input type="date" value={editForm.lastDonated} onChange={(e) => setEditForm(p => ({ ...p, lastDonated: e.target.value }))} className="mt-1" /></div>
-            <div><Label>Address</Label><Textarea value={editForm.address} onChange={(e) => setEditForm(p => ({ ...p, address: e.target.value }))} className="mt-1" rows={2} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Door No.</Label><Input value={editForm.doorNo} onChange={(e) => setEditForm(p => ({ ...p, doorNo: e.target.value }))} className="mt-1" placeholder="Door No." /></div>
+              <div><Label>Area</Label><Input value={editForm.area} onChange={(e) => setEditForm(p => ({ ...p, area: e.target.value }))} className="mt-1" placeholder="Area" /></div>
+              <div><Label>City</Label><Input value={editForm.city} onChange={(e) => setEditForm(p => ({ ...p, city: e.target.value }))} className="mt-1" placeholder="City" /></div>
+              <div><Label>District</Label><Input value={editForm.district} onChange={(e) => setEditForm(p => ({ ...p, district: e.target.value }))} className="mt-1" placeholder="District" /></div>
+            </div>
             <div><Label>Phone</Label><Input value={editForm.phone} onChange={(e) => setEditForm(p => ({ ...p, phone: e.target.value }))} className="mt-1" /></div>
             <Button onClick={handleEdit} className="w-full">Save Changes</Button>
           </div>
