@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,7 +23,10 @@ export default function Register() {
     bloodGroup: "",
     lastDonated: "",
     lastDonatedDate: "",
-    address: "",
+    doorNo: "",
+    area: "",
+    city: "",
+    district: "",
     phone: "",
   });
 
@@ -36,12 +38,18 @@ export default function Register() {
       toast.error("Please fill all required fields");
       return;
     }
+    const address = [form.doorNo, form.area, form.city, form.district].filter(Boolean).join(", ");
     const donorData = {
-      ...form,
+      fullName: form.fullName,
+      gender: form.gender,
+      department: form.department,
+      year: form.year,
+      bloodGroup: form.bloodGroup,
       lastDonated: form.lastDonated === "pick_date" ? form.lastDonatedDate : form.lastDonated === "never" ? "Never Donated" : "",
+      address,
+      phone: form.phone,
     };
-    const { lastDonatedDate, ...dataToSave } = donorData;
-    saveDonor(dataToSave);
+    saveDonor(donorData);
     toast.success("Registration successful! Thank you for becoming a donor.");
     navigate("/donors");
   };
@@ -113,9 +121,23 @@ export default function Register() {
             )}
           </div>
 
-          <div>
-            <Label htmlFor="address">Address</Label>
-            <Textarea id="address" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Hostel / Home address" className="mt-1" rows={3} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Door No.</Label>
+              <Input value={form.doorNo} onChange={(e) => set("doorNo", e.target.value)} placeholder="e.g. 12/3" className="mt-1" />
+            </div>
+            <div>
+              <Label>Area</Label>
+              <Input value={form.area} onChange={(e) => set("area", e.target.value)} placeholder="e.g. Anna Nagar" className="mt-1" />
+            </div>
+            <div>
+              <Label>City</Label>
+              <Input value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="e.g. Chennai" className="mt-1" />
+            </div>
+            <div>
+              <Label>District</Label>
+              <Input value={form.district} onChange={(e) => set("district", e.target.value)} placeholder="e.g. Chennai" className="mt-1" />
+            </div>
           </div>
 
           <div>
