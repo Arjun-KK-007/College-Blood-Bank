@@ -30,24 +30,41 @@ function getDaysAgo(dateStr: string): string {
   return `${days} days ago`;
 }
 
+function getCityFromAddress(address: string): string {
+  if (!address) return "";
+  const words = address.trim().split(/[\s,]+/).filter(Boolean);
+  if (words.length < 2) return words[0] || "";
+  return words[words.length - 2];
+}
+
 export default function DonorList() {
   const [donors, setDonors] = useState(getDonors);
   const [search, setSearch] = useState("");
   const [filterBG, setFilterBG] = useState("all");
+  const [sortCity, setSortCity] = useState("all");
   const admin = isAdmin();
   const [editDonor, setEditDonor] = useState<Donor | null>(null);
   const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", address: "", phone: "" });
   const [updateDateDonor, setUpdateDateDonor] = useState<Donor | null>(null);
   const [newLastDonated, setNewLastDonated] = useState("");
 
+  const cities = useMemo(() => {
+    const citySet = new Set<string>();
+    donors.forEach((d) => {
+      const city = getCityFromAddress(d.address);
+      if (city) citySet.add(city);
+    });
+    return Array.from(citySet).sort();
+  }, [donors]);
+
   const filtered = useMemo(() => {
     return donors.filter((d) => {
-      const matchSearch = d.fullName.toLowerCase().includes(search.toLowerCase()) ||
-        d.department.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = d.fullName.toLowerCase().includes(search.toLowerCase());
       const matchBG = filterBG === "all" || d.bloodGroup === filterBG;
-      return matchSearch && matchBG;
+      const matchCity = sortCity === "all" || getCityFromAddress(d.address).toLowerCase() === sortCity.toLowerCase();
+      return matchSearch && matchBG && matchCity;
     });
-  }, [donors, search, filterBG]);
+  }, [donors, search, filterBG, sortCity]);
 
   const handleDelete = (id: string) => {
     deleteDonor(id);
@@ -91,7 +108,7 @@ export default function DonorList() {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search by name or department..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder="Search by name..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={filterBG} onValueChange={setFilterBG}>
             <SelectTrigger className="w-full sm:w-44">
@@ -100,6 +117,15 @@ export default function DonorList() {
             <SelectContent>
               <SelectItem value="all">All Groups</SelectItem>
               {BLOOD_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={sortCity} onValueChange={setSortCity}>
+            <SelectTrigger className="w-full sm:w-44">
+              <SelectValue placeholder="City" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cities</SelectItem>
+              {cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
