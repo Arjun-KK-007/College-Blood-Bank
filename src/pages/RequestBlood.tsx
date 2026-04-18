@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +56,8 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 export default function RequestBlood() {
-  const [requests, setRequests] = useState(getRequests);
+  const [requests, setRequests] = useState<Awaited<ReturnType<typeof getRequests>>>([]);
+  const [allDonors, setAllDonors] = useState<Donor[]>([]);
   const admin = isAdmin();
   const [form, setForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
   const set = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
@@ -64,52 +65,69 @@ export default function RequestBlood() {
   const [donatingId, setDonatingId] = useState<string | null>(null);
   const [donatedDate, setDonatedDate] = useState("");
 
+  const refresh = async () => {
+    try {
+      const [r, d] = await Promise.all([getRequests(), getDonors()]);
+      setRequests(r);
+      setAllDonors(d);
+    } catch {
+      toast.error("Failed to load data");
+    }
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
   const getDaysUntilEligible = (donor: Donor): number => {
     const days = getDaysSinceLastDonation(donor);
     if (days === null) return 0;
     return Math.max(0, 100 - days);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.requesterName || !form.bloodGroup || !form.phone) {
       toast.error("Please fill all required fields");
       return;
     }
-    saveRequest(form);
-    setRequests(getRequests());
+    try {
+      await saveRequest(form);
+      await refresh();
 
-    const donors = getDonors().filter(d => d.bloodGroup === form.bloodGroup);
-    const sortedDonors = sortDonorsByEligibility(donors);
-    const eligibleDonors = sortedDonors.filter(isEligibleDonor);
+      const donors = allDonors.filter(d => d.bloodGroup === form.bloodGroup);
+      const sortedDonors = sortDonorsByEligibility(donors);
+      const eligibleDonors = sortedDonors.filter(isEligibleDonor);
 
-    if (eligibleDonors.length > 0) {
-      setMatchingDonors({ donors: sortedDonors, request: { ...form } });
-      toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) found. You can notify them manually.`);
-      toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) notified.`);
-    } else if (donors.length > 0) {
-      setMatchingDonors({ donors: sortedDonors, request: { ...form } });
-      toast.success("Blood request submitted! Matching donors found but none eligible (donated recently).");
-    } else {
-      toast.success("Blood request submitted! No matching donors found currently.");
+      if (eligibleDonors.length > 0) {
+        setMatchingDonors({ donors: sortedDonors, request: { ...form } });
+        toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) found. You can notify them manually.`);
+      } else if (donors.length > 0) {
+        setMatchingDonors({ donors: sortedDonors, request: { ...form } });
+        toast.success("Blood request submitted! Matching donors found but none eligible (donated recently).");
+      } else {
+        toast.success("Blood request submitted! No matching donors found currently.");
+      }
+
+      setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
+    } catch {
+      toast.error("Failed to submit request");
     }
-
-    setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
   };
 
-  const handleDelete = (id: string) => {
-    deleteRequest(id);
-    setRequests(getRequests());
+  const handleDelete = async (id: string) => {
+    await deleteRequest(id);
+    await refresh();
     toast.success("Request removed");
   };
 
-  const handleMarkDonated = (id: string) => {
+  const handleMarkDonated = async (id: string) => {
     if (!donatedDate) {
       toast.error("Please select a donated date");
       return;
     }
-    markRequestDonated(id, donatedDate);
-    setRequests(getRequests());
+    await markRequestDonated(id, donatedDate);
+    await refresh();
     setDonatingId(null);
     setDonatedDate("");
     toast.success("Marked as blood donated!");
@@ -186,7 +204,7 @@ export default function RequestBlood() {
             ) : (
               <div className="space-y-3">
                 {requests.map((r) => {
-                  const donors = sortDonorsByEligibility(getDonors().filter(d => d.bloodGroup === r.bloodGroup));
+                  const donors = sortDonorsByEligibility(allDonors.filter(d => d.bloodGroup === r.bloodGroup));
                   const eligibleCount = donors.filter(isEligibleDonor).length;
                   return (
                     <div key={r.id} className={`rounded-xl border bg-card p-4 shadow-sm transition-opacity ${r.donated ? 'opacity-50' : ''}`}>
