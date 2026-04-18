@@ -40,8 +40,8 @@ export default function Admin() {
             <p className="mt-1 text-sm text-muted-foreground">Enter credentials to manage records</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
-            <div><Label>Username</Label><Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1" placeholder="admin" /></div>
-            <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" placeholder="••••••••" /></div>
+            <div><Label>Username</Label><Input value={username} onChange={(e) => setUsername(e.target.value)} className="mt-1" /></div>
+            <div><Label>Password</Label><Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" /></div>
             <Button type="submit" className="w-full" size="lg">Login</Button>
           </form>
         </div>
