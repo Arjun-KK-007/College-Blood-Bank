@@ -14,7 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blood_requests: {
+        Row: {
+          blood_group: string
+          created_at: string
+          donated: boolean
+          donated_date: string
+          hospital_location: string
+          hospital_name: string
+          id: string
+          phone: string
+          requester_name: string
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          blood_group: string
+          created_at?: string
+          donated?: boolean
+          donated_date?: string
+          hospital_location?: string
+          hospital_name?: string
+          id?: string
+          phone: string
+          requester_name: string
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          blood_group?: string
+          created_at?: string
+          donated?: boolean
+          donated_date?: string
+          hospital_location?: string
+          hospital_name?: string
+          id?: string
+          phone?: string
+          requester_name?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: []
+      }
+      donors: {
+        Row: {
+          address: string
+          blood_group: string
+          created_at: string
+          department: string
+          full_name: string
+          gender: string
+          id: string
+          last_donated: string
+          phone: string
+          updated_at: string
+          year: string
+        }
+        Insert: {
+          address?: string
+          blood_group: string
+          created_at?: string
+          department: string
+          full_name: string
+          gender?: string
+          id?: string
+          last_donated?: string
+          phone: string
+          updated_at?: string
+          year: string
+        }
+        Update: {
+          address?: string
+          blood_group?: string
+          created_at?: string
+          department?: string
+          full_name?: string
+          gender?: string
+          id?: string
+          last_donated?: string
+          phone?: string
+          updated_at?: string
+          year?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

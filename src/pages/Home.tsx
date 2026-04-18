@@ -1,15 +1,20 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Heart, Users, Droplets, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDonors } from "@/lib/store";
 
-const stats = [
-  { label: "Blood Groups", value: "8", icon: Droplets },
-  { label: "Active Donors", value: () => String(getDonors().length), icon: Users },
-  { label: "Emergency Ready", value: "24/7", icon: Phone },
-];
 
 export default function Home() {
+  const [donorCount, setDonorCount] = useState(0);
+  useEffect(() => {
+    getDonors().then((d) => setDonorCount(d.length)).catch(() => setDonorCount(0));
+  }, []);
+  const stats = [
+    { label: "Blood Groups", value: "8", icon: Droplets },
+    { label: "Active Donors", value: String(donorCount), icon: Users },
+    { label: "Emergency Ready", value: "24/7", icon: Phone },
+  ];
   return (
     <div className="flex flex-col">
       {/* Hero */}
@@ -55,7 +60,7 @@ export default function Home() {
               </div>
               <div className="min-w-0">
                 <p className="text-2xl font-bold text-foreground">
-                  {typeof s.value === "function" ? s.value() : s.value}
+                  {s.value}
                 </p>
                 <p className="text-sm text-muted-foreground">{s.label}</p>
               </div>

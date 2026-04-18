@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -42,7 +42,7 @@ function getDistrictFromAddress(address: string): string {
 }
 
 export default function DonorList() {
-  const [donors, setDonors] = useState(getDonors);
+  const [donors, setDonors] = useState<Donor[]>([]);
   const [filterBG, setFilterBG] = useState("all");
   const [sortCity, setSortCity] = useState("all");
   const admin = isAdmin();
@@ -50,6 +50,19 @@ export default function DonorList() {
   const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", doorNo: "", area: "", city: "", district: "", phone: "" });
   const [updateDateDonor, setUpdateDateDonor] = useState<Donor | null>(null);
   const [newLastDonated, setNewLastDonated] = useState("");
+
+  const refresh = async () => {
+    try {
+      const data = await getDonors();
+      setDonors(data);
+    } catch {
+      toast.error("Failed to load donors");
+    }
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
 
   const cities = useMemo(() => {
     const citySet = new Set<string>();
@@ -68,9 +81,9 @@ export default function DonorList() {
     });
   }, [donors, filterBG, sortCity]);
 
-  const handleDelete = (id: string) => {
-    deleteDonor(id);
-    setDonors(getDonors());
+  const handleDelete = async (id: string) => {
+    await deleteDonor(id);
+    await refresh();
     toast.success("Donor record deleted");
   };
 
@@ -80,11 +93,11 @@ export default function DonorList() {
     setEditForm({ fullName: d.fullName, gender: d.gender || "", department: d.department, year: d.year, bloodGroup: d.bloodGroup, lastDonated: d.lastDonated || "", doorNo: parts[0] || "", area: parts[1] || "", city: parts[2] || "", district: parts[3] || "", phone: d.phone });
   };
 
-  const handleEdit = () => {
+  const handleEdit = async () => {
     if (!editDonor) return;
     const address = [editForm.doorNo, editForm.area, editForm.city, editForm.district].filter(Boolean).join(", ");
-    updateDonor(editDonor.id, { fullName: editForm.fullName, gender: editForm.gender, department: editForm.department, year: editForm.year, bloodGroup: editForm.bloodGroup, lastDonated: editForm.lastDonated, address, phone: editForm.phone });
-    setDonors(getDonors());
+    await updateDonor(editDonor.id, { fullName: editForm.fullName, gender: editForm.gender, department: editForm.department, year: editForm.year, bloodGroup: editForm.bloodGroup, lastDonated: editForm.lastDonated, address, phone: editForm.phone });
+    await refresh();
     setEditDonor(null);
     toast.success("Donor record updated");
   };
@@ -94,10 +107,11 @@ export default function DonorList() {
     setNewLastDonated(d.lastDonated && d.lastDonated !== "Never Donated" ? d.lastDonated : "");
   };
 
-  const handleUpdateDate = () => {
+  const handleUpdateDate = async () => {
     if (!updateDateDonor || !newLastDonated) return;
-    updateDonor(updateDateDonor.id, { ...updateDateDonor, lastDonated: newLastDonated });
-    setDonors(getDonors());
+    const { id, createdAt, ...rest } = updateDateDonor;
+    await updateDonor(id, { ...rest, lastDonated: newLastDonated });
+    await refresh();
     setUpdateDateDonor(null);
     toast.success("Last donation date updated");
   };

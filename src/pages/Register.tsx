@@ -32,7 +32,7 @@ export default function Register() {
 
   const set = (key: string, value: string) => setForm((p) => ({ ...p, [key]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName || !form.gender || !form.department || !form.year || !form.bloodGroup || !form.phone) {
       toast.error("Please fill all required fields");
@@ -49,9 +49,13 @@ export default function Register() {
       address,
       phone: form.phone,
     };
-    saveDonor(donorData);
-    toast.success("Registration successful! Thank you for becoming a donor.");
-    navigate("/donors");
+    try {
+      await saveDonor(donorData);
+      toast.success("Registration successful! Thank you for becoming a donor.");
+      navigate("/donors");
+    } catch {
+      toast.error("Registration failed. Please try again.");
+    }
   };
 
   return (
