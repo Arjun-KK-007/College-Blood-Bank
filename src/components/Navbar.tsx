@@ -6,10 +6,8 @@ import { Button } from "@/components/ui/button";
 
 const navLinks = [
   { to: "/", label: "Home" },
-  { to: "/register", label: "Register" },
   { to: "/donors", label: "Donor List" },
   { to: "/request", label: "Request Blood" },
-  
 ];
 
 export default function Navbar() {

@@ -6,10 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Home from "@/pages/Home";
-import Register from "@/pages/Register";
 import DonorList from "@/pages/DonorList";
 import RequestBlood from "@/pages/RequestBlood";
 import RequestBloodStandalone from "@/pages/RequestBloodStandalone";
+import RegisterStandalone from "@/pages/RegisterStandalone";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
@@ -23,13 +23,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/request-blood" element={<RequestBloodStandalone />} />
+          <Route path="/register" element={<RegisterStandalone />} />
           <Route path="*" element={
             <div className="flex min-h-screen flex-col">
               <Navbar />
               <main className="flex-1">
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/register" element={<Register />} />
                   <Route path="/donors" element={<DonorList />} />
                   <Route path="/request" element={<RequestBlood />} />
                   <Route path="/admin" element={<Admin />} />
