@@ -1,13 +1,9 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Heart, Users, Droplets, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getDonors } from "@/lib/store";
 
-const stats = [
-  { label: "Blood Groups", value: "8", icon: Droplets },
-  { label: "Active Donors", value: () => String(getDonors().length), icon: Users },
-  { label: "Emergency Ready", value: "24/7", icon: Phone },
-];
 
 export default function Home() {
   return (
