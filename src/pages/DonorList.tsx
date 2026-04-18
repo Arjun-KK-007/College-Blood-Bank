@@ -141,10 +141,8 @@ export default function DonorList() {
                 <TableHead>Year</TableHead>
                 <TableHead>Blood Group</TableHead>
                 <TableHead className="hidden md:table-cell">Last Donated</TableHead>
-                {admin && <TableHead className="hidden md:table-cell">Address</TableHead>}
-                {admin && <TableHead className="hidden md:table-cell">Phone</TableHead>}
-                {!admin && <TableHead className="hidden md:table-cell">Address</TableHead>}
-                {!admin && <TableHead className="hidden md:table-cell">Phone</TableHead>}
+                <TableHead className="hidden md:table-cell">Address</TableHead>
+                <TableHead className="hidden md:table-cell">Phone</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -157,8 +155,6 @@ export default function DonorList() {
                 </TableRow>
               ) : (
                 filtered.map((d) => {
-                  const isFemale = d.gender === "Female";
-                  const showPrivate = admin || !isFemale;
                   return (
                     <TableRow key={d.id}>
                       <TableCell className="font-medium">{d.fullName}</TableCell>
@@ -178,17 +174,8 @@ export default function DonorList() {
                           )}
                         </div>
                       </TableCell>
-                      {admin ? (
-                        <>
-                          <TableCell className="hidden max-w-[200px] truncate md:table-cell">{d.address || "—"}</TableCell>
-                          <TableCell className="hidden md:table-cell">{d.phone}</TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell className="hidden max-w-[200px] truncate md:table-cell">{showPrivate ? (d.address || "—") : "Hidden"}</TableCell>
-                          <TableCell className="hidden md:table-cell">{showPrivate ? d.phone : "Hidden"}</TableCell>
-                        </>
-                      )}
+                      <TableCell className="hidden max-w-[200px] truncate md:table-cell">{d.address || "—"}</TableCell>
+                      <TableCell className="hidden md:table-cell">{d.phone}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button size="icon" variant="ghost" onClick={() => openUpdateDate(d)} title="Update last donation date">
