@@ -77,11 +77,15 @@ export default function DonorList() {
 
   const filtered = useMemo(() => {
     return donors.filter((d) => {
+      if (!admin) {
+        if (!viewerPhone) return false;
+        if ((d.phone || "").replace(/\D/g, "") !== viewerPhone) return false;
+      }
       const matchBG = filterBG === "all" || d.bloodGroup === filterBG;
       const matchCity = sortCity === "all" || getCityFromAddress(d.address).toLowerCase() === sortCity.toLowerCase();
       return matchBG && matchCity;
     });
-  }, [donors, filterBG, sortCity]);
+  }, [donors, filterBG, sortCity, admin, viewerPhone]);
 
   const handleDelete = async (id: string) => {
     await deleteDonor(id);
