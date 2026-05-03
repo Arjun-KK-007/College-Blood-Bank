@@ -50,6 +50,8 @@ export default function DonorList() {
   const [editForm, setEditForm] = useState({ fullName: "", gender: "", department: "", year: "", bloodGroup: "", lastDonated: "", doorNo: "", area: "", city: "", district: "", phone: "" });
   const [updateDateDonor, setUpdateDateDonor] = useState<Donor | null>(null);
   const [newLastDonated, setNewLastDonated] = useState("");
+  const [viewerPhone, setViewerPhone] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
 
   const refresh = async () => {
     try {
