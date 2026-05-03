@@ -103,6 +103,15 @@ export default function DonorList() {
   };
 
   const openUpdateDate = (d: Donor) => {
+    if (!admin) {
+      const entered = window.prompt(`Enter your registered 10-digit phone number to update last donation date for ${d.fullName}:`);
+      if (entered === null) return;
+      const normalized = entered.replace(/\D/g, "");
+      if (normalized !== (d.phone || "").replace(/\D/g, "")) {
+        toast.error("Phone number does not match. You can only edit your own record.");
+        return;
+      }
+    }
     setUpdateDateDonor(d);
     setNewLastDonated(d.lastDonated && d.lastDonated !== "Never Donated" ? d.lastDonated : "");
   };
