@@ -276,6 +276,11 @@ export default function RequestBlood() {
                               <CheckCircle2 className="mr-1 h-3 w-3" /> Mark Donated
                             </Button>
                           )}
+                          {!r.donated && (
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(r)} className="h-8 w-8" title="Edit request">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
                           {admin && (
                             <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
                               <Trash2 className="h-4 w-4" />
@@ -353,6 +358,38 @@ export default function RequestBlood() {
                 </div>
               );
             })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Request Dialog */}
+      <Dialog open={!!editReq} onOpenChange={() => setEditReq(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Request</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Your Name</Label><Input value={editForm.requesterName} onChange={(e) => setEditForm(p => ({ ...p, requesterName: e.target.value }))} className="mt-1" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Blood Group</Label>
+                <Select value={editForm.bloodGroup} onValueChange={(v) => setEditForm(p => ({ ...p, bloodGroup: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{BLOOD_GROUPS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Urgency</Label>
+                <Select value={editForm.urgency} onValueChange={(v) => setEditForm(p => ({ ...p, urgency: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Normal">Normal</SelectItem>
+                    <SelectItem value="Urgent">Urgent</SelectItem>
+                    <SelectItem value="Critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div><Label>Phone (10 digits)</Label><Input inputMode="numeric" maxLength={10} value={editForm.phone} onChange={(e) => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))} className="mt-1" /></div>
+            <div><Label>Hospital Name</Label><Input value={editForm.hospitalName} onChange={(e) => setEditForm(p => ({ ...p, hospitalName: e.target.value }))} className="mt-1" /></div>
+            <div><Label>Hospital Location</Label><Input value={editForm.hospitalLocation} onChange={(e) => setEditForm(p => ({ ...p, hospitalLocation: e.target.value }))} className="mt-1" /></div>
+            <Button onClick={handleSaveEdit} className="w-full">Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>
