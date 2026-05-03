@@ -9,7 +9,7 @@ import Home from "@/pages/Home";
 import DonorList from "@/pages/DonorList";
 import RequestBlood from "@/pages/RequestBlood";
 import RequestBloodStandalone from "@/pages/RequestBloodStandalone";
-import RegisterStandalone from "@/pages/RegisterStandalone";
+import Register from "@/pages/Register";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
@@ -23,7 +23,6 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/request-blood" element={<RequestBloodStandalone />} />
-          <Route path="/register" element={<RegisterStandalone />} />
           <Route path="*" element={
             <div className="flex min-h-screen flex-col">
               <Navbar />
@@ -31,6 +30,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/donors" element={<DonorList />} />
+                  <Route path="/register" element={<Register />} />
                   <Route path="/request" element={<RequestBlood />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
