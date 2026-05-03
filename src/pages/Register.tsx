@@ -38,6 +38,11 @@ export default function Register() {
       toast.error("Please fill all required fields");
       return;
     }
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
     const address = [form.doorNo, form.area, form.city, form.district].filter(Boolean).join(", ");
     const donorData = {
       fullName: form.fullName,
@@ -47,14 +52,15 @@ export default function Register() {
       bloodGroup: form.bloodGroup,
       lastDonated: form.lastDonated === "pick_date" ? form.lastDonatedDate : form.lastDonated === "never" ? "Never Donated" : "",
       address,
-      phone: form.phone,
+      phone: phoneDigits,
     };
     try {
       await saveDonor(donorData);
       toast.success("Registration successful! Thank you for becoming a donor.");
       navigate("/donors");
-    } catch {
-      toast.error("Registration failed. Please try again.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -145,8 +151,8 @@ export default function Register() {
           </div>
 
           <div>
-            <Label htmlFor="phone">Phone Number *</Label>
-            <Input id="phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+91 98765 43210" className="mt-1" />
+            <Label htmlFor="phone">Phone Number * (10 digits)</Label>
+            <Input id="phone" inputMode="numeric" maxLength={10} value={form.phone} onChange={(e) => set("phone", e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="9876543210" className="mt-1" />
           </div>
 
           <Button type="submit" className="w-full" size="lg">

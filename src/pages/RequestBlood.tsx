@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, type Donor } from "@/lib/store";
-import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2 } from "lucide-react";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, type Donor, type BloodRequest } from "@/lib/store";
+import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 function cleanPhone(phone: string): string {
@@ -64,6 +64,8 @@ export default function RequestBlood() {
   const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
   const [donatingId, setDonatingId] = useState<string | null>(null);
   const [donatedDate, setDonatedDate] = useState("");
+  const [editReq, setEditReq] = useState<BloodRequest | null>(null);
+  const [editForm, setEditForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
 
   const refresh = async () => {
     try {
@@ -91,8 +93,14 @@ export default function RequestBlood() {
       toast.error("Please fill all required fields");
       return;
     }
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
     try {
-      await saveRequest(form);
+      const payload = { ...form, phone: phoneDigits };
+      await saveRequest(payload);
       await refresh();
 
       const donors = allDonors.filter(d => d.bloodGroup === form.bloodGroup);
@@ -100,10 +108,10 @@ export default function RequestBlood() {
       const eligibleDonors = sortedDonors.filter(isEligibleDonor);
 
       if (eligibleDonors.length > 0) {
-        setMatchingDonors({ donors: sortedDonors, request: { ...form } });
+        setMatchingDonors({ donors: sortedDonors, request: payload });
         toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) found. You can notify them manually.`);
       } else if (donors.length > 0) {
-        setMatchingDonors({ donors: sortedDonors, request: { ...form } });
+        setMatchingDonors({ donors: sortedDonors, request: payload });
         toast.success("Blood request submitted! Matching donors found but none eligible (donated recently).");
       } else {
         toast.success("Blood request submitted! No matching donors found currently.");
@@ -112,6 +120,37 @@ export default function RequestBlood() {
       setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
     } catch {
       toast.error("Failed to submit request");
+    }
+  };
+
+  const openEdit = (r: BloodRequest) => {
+    if (!admin) {
+      const entered = window.prompt("Enter the phone number used for this request to edit it:");
+      if (entered === null) return;
+      const normalized = entered.replace(/\D/g, "");
+      if (normalized !== (r.phone || "").replace(/\D/g, "")) {
+        toast.error("Phone number does not match. Only the requester can edit.");
+        return;
+      }
+    }
+    setEditReq(r);
+    setEditForm({ requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency || "Normal", hospitalName: r.hospitalName || "", hospitalLocation: r.hospitalLocation || "" });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editReq) return;
+    const phoneDigits = editForm.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
+    try {
+      await updateRequest(editReq.id, { ...editForm, phone: phoneDigits });
+      await refresh();
+      setEditReq(null);
+      toast.success("Request updated");
+    } catch {
+      toast.error("Failed to update request");
     }
   };
 
@@ -190,7 +229,7 @@ export default function RequestBlood() {
                 </Select>
               </div>
             </div>
-            <div><Label>Phone *</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+91 98765 43210" className="mt-1" /></div>
+            <div><Label>Phone * (10 digits)</Label><Input inputMode="numeric" maxLength={10} value={form.phone} onChange={(e) => set("phone", e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="9876543210" className="mt-1" /></div>
             <div><Label>Hospital Name</Label><Input value={form.hospitalName} onChange={(e) => set("hospitalName", e.target.value)} placeholder="City General Hospital" className="mt-1" /></div>
             <div><Label>Hospital Location</Label><Input value={form.hospitalLocation} onChange={(e) => set("hospitalLocation", e.target.value)} placeholder="123 Main Street, City" className="mt-1" /></div>
             <Button type="submit" className="w-full" size="lg">Submit Request</Button>
@@ -235,6 +274,11 @@ export default function RequestBlood() {
                               onClick={() => { setDonatingId(r.id); setDonatedDate(new Date().toISOString().split("T")[0]); }}
                             >
                               <CheckCircle2 className="mr-1 h-3 w-3" /> Mark Donated
+                            </Button>
+                          )}
+                          {!r.donated && (
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(r)} className="h-8 w-8" title="Edit request">
+                              <Pencil className="h-4 w-4" />
                             </Button>
                           )}
                           {admin && (
@@ -314,6 +358,38 @@ export default function RequestBlood() {
                 </div>
               );
             })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Request Dialog */}
+      <Dialog open={!!editReq} onOpenChange={() => setEditReq(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Edit Request</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Your Name</Label><Input value={editForm.requesterName} onChange={(e) => setEditForm(p => ({ ...p, requesterName: e.target.value }))} className="mt-1" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Blood Group</Label>
+                <Select value={editForm.bloodGroup} onValueChange={(v) => setEditForm(p => ({ ...p, bloodGroup: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>{BLOOD_GROUPS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div><Label>Urgency</Label>
+                <Select value={editForm.urgency} onValueChange={(v) => setEditForm(p => ({ ...p, urgency: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Normal">Normal</SelectItem>
+                    <SelectItem value="Urgent">Urgent</SelectItem>
+                    <SelectItem value="Critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div><Label>Phone (10 digits)</Label><Input inputMode="numeric" maxLength={10} value={editForm.phone} onChange={(e) => setEditForm(p => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))} className="mt-1" /></div>
+            <div><Label>Hospital Name</Label><Input value={editForm.hospitalName} onChange={(e) => setEditForm(p => ({ ...p, hospitalName: e.target.value }))} className="mt-1" /></div>
+            <div><Label>Hospital Location</Label><Input value={editForm.hospitalLocation} onChange={(e) => setEditForm(p => ({ ...p, hospitalLocation: e.target.value }))} className="mt-1" /></div>
+            <Button onClick={handleSaveEdit} className="w-full">Save Changes</Button>
           </div>
         </DialogContent>
       </Dialog>

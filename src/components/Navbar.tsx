@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 const navLinks = [
   { to: "/", label: "Home" },
   { to: "/donors", label: "Donor List" },
+  { to: "/register", label: "Register" },
   { to: "/request", label: "Request Blood" },
 ];
 
