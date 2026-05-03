@@ -91,8 +91,14 @@ export default function RequestBlood() {
       toast.error("Please fill all required fields");
       return;
     }
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
     try {
-      await saveRequest(form);
+      const payload = { ...form, phone: phoneDigits };
+      await saveRequest(payload);
       await refresh();
 
       const donors = allDonors.filter(d => d.bloodGroup === form.bloodGroup);
@@ -100,10 +106,10 @@ export default function RequestBlood() {
       const eligibleDonors = sortedDonors.filter(isEligibleDonor);
 
       if (eligibleDonors.length > 0) {
-        setMatchingDonors({ donors: sortedDonors, request: { ...form } });
+        setMatchingDonors({ donors: sortedDonors, request: payload });
         toast.success(`Blood request submitted! ${eligibleDonors.length} eligible donor(s) found. You can notify them manually.`);
       } else if (donors.length > 0) {
-        setMatchingDonors({ donors: sortedDonors, request: { ...form } });
+        setMatchingDonors({ donors: sortedDonors, request: payload });
         toast.success("Blood request submitted! Matching donors found but none eligible (donated recently).");
       } else {
         toast.success("Blood request submitted! No matching donors found currently.");
@@ -112,6 +118,37 @@ export default function RequestBlood() {
       setForm({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
     } catch {
       toast.error("Failed to submit request");
+    }
+  };
+
+  const openEdit = (r: BloodRequest) => {
+    if (!admin) {
+      const entered = window.prompt("Enter the phone number used for this request to edit it:");
+      if (entered === null) return;
+      const normalized = entered.replace(/\D/g, "");
+      if (normalized !== (r.phone || "").replace(/\D/g, "")) {
+        toast.error("Phone number does not match. Only the requester can edit.");
+        return;
+      }
+    }
+    setEditReq(r);
+    setEditForm({ requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency || "Normal", hospitalName: r.hospitalName || "", hospitalLocation: r.hospitalLocation || "" });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editReq) return;
+    const phoneDigits = editForm.phone.replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
+    try {
+      await updateRequest(editReq.id, { ...editForm, phone: phoneDigits });
+      await refresh();
+      setEditReq(null);
+      toast.success("Request updated");
+    } catch {
+      toast.error("Failed to update request");
     }
   };
 
@@ -190,7 +227,7 @@ export default function RequestBlood() {
                 </Select>
               </div>
             </div>
-            <div><Label>Phone *</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+91 98765 43210" className="mt-1" /></div>
+            <div><Label>Phone * (10 digits)</Label><Input inputMode="numeric" maxLength={10} value={form.phone} onChange={(e) => set("phone", e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="9876543210" className="mt-1" /></div>
             <div><Label>Hospital Name</Label><Input value={form.hospitalName} onChange={(e) => set("hospitalName", e.target.value)} placeholder="City General Hospital" className="mt-1" /></div>
             <div><Label>Hospital Location</Label><Input value={form.hospitalLocation} onChange={(e) => set("hospitalLocation", e.target.value)} placeholder="123 Main Street, City" className="mt-1" /></div>
             <Button type="submit" className="w-full" size="lg">Submit Request</Button>
