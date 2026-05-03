@@ -135,8 +135,47 @@ export default function DonorList() {
     <div className="gradient-soft min-h-[80vh] py-12">
       <div className="container mx-auto px-4">
         <h1 className="font-display text-3xl font-bold text-foreground">Donor List</h1>
-        <p className="mt-2 text-muted-foreground">Browse registered blood donors.</p>
+        <p className="mt-2 text-muted-foreground">{admin ? "Browse all registered blood donors." : "View your own donor record."}</p>
 
+        {!admin && (
+          <div className="mt-6 flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm sm:flex-row sm:items-end">
+            <div className="flex-1">
+              <Label>Enter your registered 10-digit phone number to view your record</Label>
+              <Input
+                inputMode="numeric"
+                maxLength={10}
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, ""))}
+                placeholder="10-digit phone"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  if (phoneInput.length !== 10) {
+                    toast.error("Phone must be 10 digits");
+                    return;
+                  }
+                  const match = donors.find((d) => (d.phone || "").replace(/\D/g, "") === phoneInput);
+                  if (!match) {
+                    toast.error("No donor found with this phone number");
+                    return;
+                  }
+                  setViewerPhone(phoneInput);
+                  toast.success("Showing your record");
+                }}
+              >
+                View
+              </Button>
+              {viewerPhone && (
+                <Button variant="outline" onClick={() => { setViewerPhone(""); setPhoneInput(""); }}>
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
         {/* Filters */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select value={filterBG} onValueChange={setFilterBG}>
