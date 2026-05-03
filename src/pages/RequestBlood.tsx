@@ -64,6 +64,8 @@ export default function RequestBlood() {
   const [matchingDonors, setMatchingDonors] = useState<{ donors: Donor[]; request: typeof form } | null>(null);
   const [donatingId, setDonatingId] = useState<string | null>(null);
   const [donatedDate, setDonatedDate] = useState("");
+  const [editReq, setEditReq] = useState<BloodRequest | null>(null);
+  const [editForm, setEditForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
 
   const refresh = async () => {
     try {
