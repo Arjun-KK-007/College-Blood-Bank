@@ -27,6 +27,17 @@ export interface BloodRequest {
 const DONORS_KEY = "bloodbank_donors";
 const REQUESTS_KEY = "bloodbank_requests";
 const ADMIN_KEY = "bloodbank_admin";
+const SIGNED_IN_KEY = "bloodbank_donor_phone";
+
+export function getSignedInPhone(): string {
+  return localStorage.getItem(SIGNED_IN_KEY) || "";
+}
+export function setSignedInPhone(phone: string): void {
+  localStorage.setItem(SIGNED_IN_KEY, normalizePhone(phone));
+}
+export function clearSignedInPhone(): void {
+  localStorage.removeItem(SIGNED_IN_KEY);
+}
 
 function readArr<T>(key: string): T[] {
   try {
