@@ -172,13 +172,27 @@ export default function Register() {
 
   // ===== Profile View =====
   if (mode === "profile" && donor) {
+    const daysAgo = (() => {
+      if (!donor.lastDonated || donor.lastDonated === "Never Donated") return "";
+      const d = new Date(donor.lastDonated);
+      if (isNaN(d.getTime())) return "";
+      const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+      if (days === 0) return "Today";
+      if (days === 1) return "1 day ago";
+      return `${days} days ago`;
+    })();
+    const lastDonatedDisplay = donor.lastDonated
+      ? donor.lastDonated === "Never Donated"
+        ? "Never Donated"
+        : `${donor.lastDonated}${daysAgo ? ` (${daysAgo})` : ""}`
+      : "—";
     const rows: { label: string; value: string }[] = [
       { label: "Full Name", value: donor.fullName },
       { label: "Gender", value: donor.gender },
       { label: "Department", value: donor.department },
       { label: "Year", value: donor.year },
       { label: "Blood Group", value: donor.bloodGroup },
-      { label: "Last Donated", value: donor.lastDonated || "—" },
+      { label: "Last Donated", value: lastDonatedDisplay },
       { label: "Address", value: donor.address || "—" },
       { label: "Phone", value: donor.phone },
     ];
