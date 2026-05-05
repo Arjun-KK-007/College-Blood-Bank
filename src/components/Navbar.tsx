@@ -4,17 +4,17 @@ import { Heart, Menu, X, Shield } from "lucide-react";
 import { isAdmin, logoutAdmin } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
-const navLinks = [
-  { to: "/", label: "Home" },
-  { to: "/donors", label: "Donor List" },
-  { to: "/register", label: "Sign In" },
-  { to: "/request", label: "Request Blood" },
-];
-
 export default function Navbar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const admin = isAdmin();
+
+  const navLinks = [
+    { to: "/", label: "Home" },
+    ...(admin ? [{ to: "/donors", label: "Donor List" }] : []),
+    { to: "/register", label: "Sign In" },
+    { to: "/request", label: "Request Blood" },
+  ];
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
