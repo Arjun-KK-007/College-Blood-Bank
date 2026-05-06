@@ -387,6 +387,40 @@ export default function RequestBlood() {
         </DialogContent>
       </Dialog>
 
+      {/* OTP Verification Dialog */}
+      <Dialog open={!!otpReq} onOpenChange={() => setOtpReq(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Verify Phone</DialogTitle>
+          </DialogHeader>
+          {otpStage === "send" ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                For your security, we'll send a 6-digit code to the phone number on this request ({otpReq && maskPhone(otpReq.phone)}).
+              </p>
+              <Button onClick={handleSendOtp} className="w-full">Send OTP</Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {otpReq && maskPhone(otpReq.phone)}.</p>
+              {otpDevHint && (
+                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                  Demo mode (no SMS gateway): your code is <strong className="text-foreground">{otpDevHint}</strong>
+                </p>
+              )}
+              <div>
+                <Label>OTP Code</Label>
+                <Input inputMode="numeric" maxLength={6} value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" className="mt-1 tracking-widest" />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="ghost" onClick={() => { setOtpStage("send"); setOtpCode(""); setOtpDevHint(""); }}>Resend</Button>
+                <Button onClick={handleVerifyOtp}>Verify</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Request Dialog */}
       <Dialog open={!!editReq} onOpenChange={() => setEditReq(null)}>
         <DialogContent className="max-w-md">
