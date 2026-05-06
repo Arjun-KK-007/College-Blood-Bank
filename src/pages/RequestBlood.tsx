@@ -322,7 +322,7 @@ export default function RequestBlood() {
                         </div>
                       )}
                       <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
-                      <p className="text-sm text-muted-foreground">{r.phone}</p>
+                      <p className="text-sm text-muted-foreground">{admin ? r.phone : maskPhone(r.phone)}</p>
                       <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
                       {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
                       {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
