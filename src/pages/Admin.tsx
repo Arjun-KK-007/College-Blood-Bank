@@ -19,12 +19,14 @@ export default function Admin() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginAdmin(username, password)) {
+    const result = loginAdmin(username, password);
+    if (result.ok) {
       toast.success("Logged in as admin");
       navigate("/donors");
       window.location.reload();
     } else {
-      toast.error("Invalid credentials");
+      toast.error(result.error || "Invalid credentials");
+      setPassword("");
     }
   };
 

@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, type Donor, type BloodRequest } from "@/lib/store";
-import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, sendOtp, verifyOtp, maskPhone, type Donor, type BloodRequest } from "@/lib/store";
+import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 function cleanPhone(phone: string): string {
   return phone.replace(/[\s\-()]/g, "");
@@ -66,6 +66,11 @@ export default function RequestBlood() {
   const [donatedDate, setDonatedDate] = useState("");
   const [editReq, setEditReq] = useState<BloodRequest | null>(null);
   const [editForm, setEditForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
+  // OTP gate for editing
+  const [otpReq, setOtpReq] = useState<BloodRequest | null>(null);
+  const [otpStage, setOtpStage] = useState<"send" | "verify">("send");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpDevHint, setOtpDevHint] = useState("");
 
   const refresh = async () => {
     try {
@@ -124,17 +129,37 @@ export default function RequestBlood() {
   };
 
   const openEdit = (r: BloodRequest) => {
-    if (!admin) {
-      const entered = window.prompt("Enter the phone number used for this request to edit it:");
-      if (entered === null) return;
-      const normalized = entered.replace(/\D/g, "");
-      if (normalized !== (r.phone || "").replace(/\D/g, "")) {
-        toast.error("Phone number does not match. Only the requester can edit.");
-        return;
-      }
+    if (admin) {
+      setEditReq(r);
+      setEditForm({ requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency || "Normal", hospitalName: r.hospitalName || "", hospitalLocation: r.hospitalLocation || "" });
+      return;
     }
+    // Non-admin: require OTP sent to the request's phone
+    setOtpReq(r);
+    setOtpStage("send");
+    setOtpCode("");
+    setOtpDevHint("");
+  };
+
+  const handleSendOtp = () => {
+    if (!otpReq) return;
+    const code = sendOtp(otpReq.phone);
+    setOtpDevHint(code);
+    setOtpStage("verify");
+    toast.success(`OTP sent to ${maskPhone(otpReq.phone)}`);
+  };
+
+  const handleVerifyOtp = () => {
+    if (!otpReq) return;
+    if (!verifyOtp(otpReq.phone, otpCode)) {
+      toast.error("Invalid or expired OTP");
+      return;
+    }
+    const r = otpReq;
+    setOtpReq(null);
     setEditReq(r);
     setEditForm({ requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency || "Normal", hospitalName: r.hospitalName || "", hospitalLocation: r.hospitalLocation || "" });
+    toast.success("Verified — you can edit your request.");
   };
 
   const handleSaveEdit = async () => {
@@ -256,7 +281,7 @@ export default function RequestBlood() {
                           {r.donated && <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"><CheckCircle2 className="h-3 w-3" /> Donated</span>}
                         </div>
                         <div className="flex items-center gap-1">
-                          {!r.donated && donors.length > 0 && (
+                          {admin && !r.donated && donors.length > 0 && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -297,7 +322,7 @@ export default function RequestBlood() {
                         </div>
                       )}
                       <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
-                      <p className="text-sm text-muted-foreground">{r.phone}</p>
+                      <p className="text-sm text-muted-foreground">{admin ? r.phone : maskPhone(r.phone)}</p>
                       <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
                       {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
                       {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
@@ -338,9 +363,9 @@ export default function RequestBlood() {
               return (
                 <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-60' : ''}`}>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
-                    <p className="text-xs text-muted-foreground">{donor.gender} • {donor.phone}</p>
-                    {donor.address && <p className="text-xs text-muted-foreground">📍 {donor.address}</p>}
+                    <p className="text-sm font-medium text-foreground">{admin ? donor.fullName : donor.fullName.split(" ")[0]}</p>
+                    <p className="text-xs text-muted-foreground">{donor.gender} • {admin ? donor.phone : maskPhone(donor.phone)}</p>
+                    {admin && donor.address && <p className="text-xs text-muted-foreground">📍 {donor.address}</p>}
                     <p className="text-xs text-muted-foreground">
                       {eligible ? "✅ Can donate" : `❌ Can donate after ${daysUntil} days`}
                     </p>
@@ -359,6 +384,40 @@ export default function RequestBlood() {
               );
             })}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* OTP Verification Dialog */}
+      <Dialog open={!!otpReq} onOpenChange={() => setOtpReq(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Verify Phone</DialogTitle>
+          </DialogHeader>
+          {otpStage === "send" ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                For your security, we'll send a 6-digit code to the phone number on this request ({otpReq && maskPhone(otpReq.phone)}).
+              </p>
+              <Button onClick={handleSendOtp} className="w-full">Send OTP</Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {otpReq && maskPhone(otpReq.phone)}.</p>
+              {otpDevHint && (
+                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                  Demo mode (no SMS gateway): your code is <strong className="text-foreground">{otpDevHint}</strong>
+                </p>
+              )}
+              <div>
+                <Label>OTP Code</Label>
+                <Input inputMode="numeric" maxLength={6} value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" className="mt-1 tracking-widest" />
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="ghost" onClick={() => { setOtpStage("send"); setOtpCode(""); setOtpDevHint(""); }}>Resend</Button>
+                <Button onClick={handleVerifyOtp}>Verify</Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

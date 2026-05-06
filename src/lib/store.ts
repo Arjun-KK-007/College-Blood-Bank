@@ -130,20 +130,75 @@ export async function markRequestDonated(id: string, donatedDate: string): Promi
 }
 
 // ===== Admin =====
+const ADMIN_ATTEMPTS_KEY = "bloodbank_admin_attempts";
+const ADMIN_LOCK_KEY = "bloodbank_admin_lock_until";
+const MAX_ATTEMPTS = 5;
+const LOCK_MS = 5 * 60 * 1000; // 5 minutes
+
 export function isAdmin(): boolean {
   return localStorage.getItem(ADMIN_KEY) === "true";
 }
 
-export function loginAdmin(username: string, password: string): boolean {
+export function getAdminLockRemaining(): number {
+  const until = parseInt(localStorage.getItem(ADMIN_LOCK_KEY) || "0", 10);
+  return Math.max(0, until - Date.now());
+}
+
+export function loginAdmin(username: string, password: string): { ok: boolean; error?: string } {
+  const lockRemaining = getAdminLockRemaining();
+  if (lockRemaining > 0) {
+    return { ok: false, error: `Too many attempts. Try again in ${Math.ceil(lockRemaining / 1000)}s.` };
+  }
   if (username === "Admin" && password === "admin2026/") {
     localStorage.setItem(ADMIN_KEY, "true");
-    return true;
+    localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
+    localStorage.removeItem(ADMIN_LOCK_KEY);
+    return { ok: true };
   }
-  return false;
+  const attempts = parseInt(localStorage.getItem(ADMIN_ATTEMPTS_KEY) || "0", 10) + 1;
+  localStorage.setItem(ADMIN_ATTEMPTS_KEY, String(attempts));
+  if (attempts >= MAX_ATTEMPTS) {
+    localStorage.setItem(ADMIN_LOCK_KEY, String(Date.now() + LOCK_MS));
+    localStorage.removeItem(ADMIN_ATTEMPTS_KEY);
+    return { ok: false, error: "Too many failed attempts. Locked for 5 minutes." };
+  }
+  return { ok: false, error: `Invalid credentials. ${MAX_ATTEMPTS - attempts} attempt(s) remaining.` };
 }
 
 export function logoutAdmin(): void {
   localStorage.removeItem(ADMIN_KEY);
+}
+
+// ===== OTP (demo: code shown to user, simulating SMS) =====
+const OTP_KEY = "bloodbank_otp";
+interface OtpRecord { phone: string; code: string; expiresAt: number; }
+
+export function sendOtp(phone: string): string {
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const record: OtpRecord = { phone: normalizePhone(phone), code, expiresAt: Date.now() + 5 * 60 * 1000 };
+  localStorage.setItem(OTP_KEY, JSON.stringify(record));
+  return code;
+}
+
+export function verifyOtp(phone: string, code: string): boolean {
+  try {
+    const raw = localStorage.getItem(OTP_KEY);
+    if (!raw) return false;
+    const rec = JSON.parse(raw) as OtpRecord;
+    if (rec.expiresAt < Date.now()) return false;
+    if (rec.phone !== normalizePhone(phone)) return false;
+    if (rec.code !== code.trim()) return false;
+    localStorage.removeItem(OTP_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function maskPhone(phone: string): string {
+  const digits = normalizePhone(phone);
+  if (digits.length < 4) return "••••";
+  return "••••••" + digits.slice(-4);
 }
 
 export const DEPARTMENTS = [
