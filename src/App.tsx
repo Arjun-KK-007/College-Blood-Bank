@@ -8,7 +8,6 @@ import Footer from "@/components/Footer";
 import Home from "@/pages/Home";
 import DonorList from "@/pages/DonorList";
 import RequestBlood from "@/pages/RequestBlood";
-import RequestBloodStandalone from "@/pages/RequestBloodStandalone";
 import Register from "@/pages/Register";
 import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
@@ -21,25 +20,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/request-blood" element={<RequestBloodStandalone />} />
-          <Route path="*" element={
-            <div className="flex min-h-screen flex-col">
-              <Navbar />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/donors" element={<DonorList />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/request" element={<RequestBlood />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          } />
-        </Routes>
+        <div className="flex min-h-screen flex-col">
+          <Navbar />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/donors" element={<DonorList />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/request" element={<RequestBlood />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
