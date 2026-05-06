@@ -281,7 +281,7 @@ export default function RequestBlood() {
                           {r.donated && <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"><CheckCircle2 className="h-3 w-3" /> Donated</span>}
                         </div>
                         <div className="flex items-center gap-1">
-                          {!r.donated && donors.length > 0 && (
+                          {admin && !r.donated && donors.length > 0 && (
                             <Button
                               size="sm"
                               variant="outline"
