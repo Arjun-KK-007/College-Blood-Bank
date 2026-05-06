@@ -29,6 +29,9 @@ import {
   setSignedInPhone,
   clearSignedInPhone,
   updateDonorLastDonated,
+  sendOtp,
+  verifyOtp,
+  maskPhone,
   type Donor,
 } from "@/lib/store";
 
@@ -39,6 +42,12 @@ export default function Register() {
   const [donor, setDonor] = useState<Donor | null>(null);
   const [signinPhone, setSigninPhone] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // OTP for sign-in
+  const [otpStage, setOtpStage] = useState<"idle" | "verify">("idle");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpDevHint, setOtpDevHint] = useState("");
+  const [pendingDonor, setPendingDonor] = useState<Donor | null>(null);
 
   // Update last donated dialog
   const [editOpen, setEditOpen] = useState(false);
@@ -89,16 +98,34 @@ export default function Register() {
       return;
     }
     const found = await getDonorByPhone(phoneDigits);
-    if (found) {
-      setSignedInPhone(phoneDigits);
-      setDonor(found);
-      setMode("profile");
-      toast.success(`Welcome back, ${found.fullName}!`);
-    } else {
+    if (!found) {
       toast.error("No donor found with this phone number. Please register.");
       set("phone", phoneDigits);
       setMode("register");
+      return;
     }
+    // Send OTP — donor must verify before identity is exposed
+    const code = sendOtp(phoneDigits);
+    setOtpDevHint(code);
+    setPendingDonor(found);
+    setOtpStage("verify");
+    toast.success(`OTP sent to ${maskPhone(phoneDigits)}`);
+  };
+
+  const handleVerifySigninOtp = () => {
+    if (!pendingDonor) return;
+    if (!verifyOtp(pendingDonor.phone, otpCode)) {
+      toast.error("Invalid or expired OTP");
+      return;
+    }
+    setSignedInPhone(pendingDonor.phone);
+    setDonor(pendingDonor);
+    setMode("profile");
+    setOtpStage("idle");
+    setOtpCode("");
+    setOtpDevHint("");
+    setPendingDonor(null);
+    toast.success(`Welcome back, ${pendingDonor.fullName}!`);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
