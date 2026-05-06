@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, type Donor, type BloodRequest } from "@/lib/store";
-import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, sendOtp, verifyOtp, maskPhone, type Donor, type BloodRequest } from "@/lib/store";
+import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 function cleanPhone(phone: string): string {
   return phone.replace(/[\s\-()]/g, "");
@@ -66,6 +66,11 @@ export default function RequestBlood() {
   const [donatedDate, setDonatedDate] = useState("");
   const [editReq, setEditReq] = useState<BloodRequest | null>(null);
   const [editForm, setEditForm] = useState({ requesterName: "", bloodGroup: "", phone: "", urgency: "Normal", hospitalName: "", hospitalLocation: "" });
+  // OTP gate for editing
+  const [otpReq, setOtpReq] = useState<BloodRequest | null>(null);
+  const [otpStage, setOtpStage] = useState<"send" | "verify">("send");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpDevHint, setOtpDevHint] = useState("");
 
   const refresh = async () => {
     try {
@@ -124,17 +129,37 @@ export default function RequestBlood() {
   };
 
   const openEdit = (r: BloodRequest) => {
-    if (!admin) {
-      const entered = window.prompt("Enter the phone number used for this request to edit it:");
-      if (entered === null) return;
-      const normalized = entered.replace(/\D/g, "");
-      if (normalized !== (r.phone || "").replace(/\D/g, "")) {
-        toast.error("Phone number does not match. Only the requester can edit.");
-        return;
-      }
+    if (admin) {
+      setEditReq(r);
+      setEditForm({ requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency || "Normal", hospitalName: r.hospitalName || "", hospitalLocation: r.hospitalLocation || "" });
+      return;
     }
+    // Non-admin: require OTP sent to the request's phone
+    setOtpReq(r);
+    setOtpStage("send");
+    setOtpCode("");
+    setOtpDevHint("");
+  };
+
+  const handleSendOtp = () => {
+    if (!otpReq) return;
+    const code = sendOtp(otpReq.phone);
+    setOtpDevHint(code);
+    setOtpStage("verify");
+    toast.success(`OTP sent to ${maskPhone(otpReq.phone)}`);
+  };
+
+  const handleVerifyOtp = () => {
+    if (!otpReq) return;
+    if (!verifyOtp(otpReq.phone, otpCode)) {
+      toast.error("Invalid or expired OTP");
+      return;
+    }
+    const r = otpReq;
+    setOtpReq(null);
     setEditReq(r);
     setEditForm({ requesterName: r.requesterName, bloodGroup: r.bloodGroup, phone: r.phone, urgency: r.urgency || "Normal", hospitalName: r.hospitalName || "", hospitalLocation: r.hospitalLocation || "" });
+    toast.success("Verified — you can edit your request.");
   };
 
   const handleSaveEdit = async () => {
