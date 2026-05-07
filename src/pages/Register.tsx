@@ -29,7 +29,7 @@ import {
   setSignedInPhone,
   clearSignedInPhone,
   updateDonorLastDonated,
-  sendOtp,
+  sendOtpSms,
   verifyOtp,
   maskPhone,
   type Donor,
