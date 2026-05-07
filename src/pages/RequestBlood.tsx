@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, sendOtp, verifyOtp, maskPhone, getDonorCity, type Donor, type BloodRequest } from "@/lib/store";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, sendOtpSms, verifyOtp, maskPhone, getDonorCity, type Donor, type BloodRequest } from "@/lib/store";
 import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
@@ -141,10 +141,14 @@ export default function RequestBlood() {
     setOtpDevHint("");
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!otpReq) return;
-    const code = sendOtp(otpReq.phone);
-    setOtpDevHint(code);
+    const res = await sendOtpSms(otpReq.phone, "edit_request");
+    if (!res.ok) {
+      toast.error(res.error || "Failed to send OTP");
+      return;
+    }
+    setOtpDevHint("");
     setOtpStage("verify");
     toast.success(`OTP sent to ${maskPhone(otpReq.phone)}`);
   };
@@ -403,11 +407,7 @@ export default function RequestBlood() {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {otpReq && maskPhone(otpReq.phone)}.</p>
-              {otpDevHint && (
-                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                  Demo mode (no SMS gateway): your code is <strong className="text-foreground">{otpDevHint}</strong>
-                </p>
-              )}
+              {null}
               <div>
                 <Label>OTP Code</Label>
                 <Input inputMode="numeric" maxLength={6} value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" className="mt-1 tracking-widest" />

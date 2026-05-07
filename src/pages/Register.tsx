@@ -29,7 +29,7 @@ import {
   setSignedInPhone,
   clearSignedInPhone,
   updateDonorLastDonated,
-  sendOtp,
+  sendOtpSms,
   verifyOtp,
   maskPhone,
   type Donor,
@@ -104,9 +104,13 @@ export default function Register() {
       setMode("register");
       return;
     }
-    // Send OTP — donor must verify before identity is exposed
-    const code = sendOtp(phoneDigits);
-    setOtpDevHint(code);
+    // Send OTP via SMS
+    const res = await sendOtpSms(phoneDigits, "signin");
+    if (!res.ok) {
+      toast.error(res.error || "Failed to send OTP");
+      return;
+    }
+    setOtpDevHint("");
     setPendingDonor(found);
     setOtpStage("verify");
     toast.success(`OTP sent to ${maskPhone(phoneDigits)}`);
@@ -314,11 +318,7 @@ export default function Register() {
               <p className="text-sm text-muted-foreground">
                 We sent a 6-digit verification code to {maskPhone(pendingDonor.phone)}.
               </p>
-              {otpDevHint && (
-                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                  Demo mode (no SMS gateway): your code is <strong className="text-foreground">{otpDevHint}</strong>
-                </p>
-              )}
+              {null}
               <div>
                 <Label htmlFor="otp">OTP Code</Label>
                 <Input
