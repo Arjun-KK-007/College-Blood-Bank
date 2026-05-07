@@ -7,8 +7,16 @@ export interface Donor {
   bloodGroup: string;
   lastDonated: string;
   address: string;
+  city?: string;
   phone: string;
   createdAt: string;
+}
+
+export function getDonorCity(d: Donor): string {
+  if (d.city) return d.city;
+  // fallback: try to extract from comma-separated address (doorNo, area, city, district)
+  const parts = (d.address || "").split(",").map((s) => s.trim()).filter(Boolean);
+  return parts[2] || parts[parts.length - 1] || "";
 }
 
 export interface BloodRequest {

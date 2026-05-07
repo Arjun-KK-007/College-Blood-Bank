@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, sendOtp, verifyOtp, maskPhone, type Donor, type BloodRequest } from "@/lib/store";
+import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, sendOtp, verifyOtp, maskPhone, getDonorCity, type Donor, type BloodRequest } from "@/lib/store";
 import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
@@ -322,7 +322,7 @@ export default function RequestBlood() {
                         </div>
                       )}
                       <p className="mt-2 font-medium text-foreground">{r.requesterName}</p>
-                      <p className="text-sm text-muted-foreground">{admin ? r.phone : maskPhone(r.phone)}</p>
+                      <p className="text-sm text-muted-foreground">{r.phone}</p>
                       <p className="text-xs text-muted-foreground">📅 Requested: {new Date(r.createdAt).toLocaleDateString("en-GB")}</p>
                       {r.hospitalName && <p className="mt-1 text-sm text-muted-foreground">🏥 {r.hospitalName}</p>}
                       {r.hospitalLocation && <p className="text-sm text-muted-foreground">📍 {r.hospitalLocation}</p>}
@@ -363,9 +363,9 @@ export default function RequestBlood() {
               return (
                 <div key={donor.id} className={`flex items-center justify-between rounded-lg border p-3 ${!eligible ? 'opacity-60' : ''}`}>
                   <div>
-                    <p className="text-sm font-medium text-foreground">{admin ? donor.fullName : donor.fullName.split(" ")[0]}</p>
-                    <p className="text-xs text-muted-foreground">{donor.gender} • {admin ? donor.phone : maskPhone(donor.phone)}</p>
-                    {admin && donor.address && <p className="text-xs text-muted-foreground">📍 {donor.address}</p>}
+                    <p className="text-sm font-medium text-foreground">{donor.fullName}</p>
+                    <p className="text-xs text-muted-foreground">{donor.gender} • {donor.phone}</p>
+                    {getDonorCity(donor) && <p className="text-xs text-muted-foreground">📍 {getDonorCity(donor)}</p>}
                     <p className="text-xs text-muted-foreground">
                       {eligible ? "✅ Can donate" : `❌ Can donate after ${daysUntil} days`}
                     </p>
