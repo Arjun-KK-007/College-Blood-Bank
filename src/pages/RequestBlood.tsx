@@ -407,11 +407,7 @@ export default function RequestBlood() {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {otpReq && maskPhone(otpReq.phone)}.</p>
-              {otpDevHint && (
-                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                  Demo mode (no SMS gateway): your code is <strong className="text-foreground">{otpDevHint}</strong>
-                </p>
-              )}
+              {null}
               <div>
                 <Label>OTP Code</Label>
                 <Input inputMode="numeric" maxLength={6} value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="123456" className="mt-1 tracking-widest" />
