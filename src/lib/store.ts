@@ -188,6 +188,23 @@ export function sendOtp(phone: string): string {
   return code;
 }
 
+export async function sendOtpSms(phone: string, purpose: "signin" | "edit_request"): Promise<{ ok: boolean; error?: string }> {
+  const code = sendOtp(phone);
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data, error } = await supabase.functions.invoke("send-otp", {
+      body: { phone: normalizePhone(phone), code, purpose },
+    });
+    if (error || (data && (data as { error?: string }).error)) {
+      return { ok: false, error: error?.message || (data as { error?: string }).error || "Failed to send SMS" };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+
 export function verifyOtp(phone: string, code: string): boolean {
   try {
     const raw = localStorage.getItem(OTP_KEY);
