@@ -318,11 +318,7 @@ export default function Register() {
               <p className="text-sm text-muted-foreground">
                 We sent a 6-digit verification code to {maskPhone(pendingDonor.phone)}.
               </p>
-              {otpDevHint && (
-                <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                  Demo mode (no SMS gateway): your code is <strong className="text-foreground">{otpDevHint}</strong>
-                </p>
-              )}
+              {null}
               <div>
                 <Label htmlFor="otp">OTP Code</Label>
                 <Input
