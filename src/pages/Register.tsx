@@ -153,6 +153,7 @@ export default function Register() {
           ? "Never Donated"
           : "",
       address,
+      city: form.city,
       phone: phoneDigits,
     };
     try {
