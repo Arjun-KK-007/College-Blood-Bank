@@ -104,9 +104,13 @@ export default function Register() {
       setMode("register");
       return;
     }
-    // Send OTP — donor must verify before identity is exposed
-    const code = sendOtp(phoneDigits);
-    setOtpDevHint(code);
+    // Send OTP via SMS
+    const res = await sendOtpSms(phoneDigits, "signin");
+    if (!res.ok) {
+      toast.error(res.error || "Failed to send OTP");
+      return;
+    }
+    setOtpDevHint("");
     setPendingDonor(found);
     setOtpStage("verify");
     toast.success(`OTP sent to ${maskPhone(phoneDigits)}`);
