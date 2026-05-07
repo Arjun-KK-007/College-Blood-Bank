@@ -141,10 +141,14 @@ export default function RequestBlood() {
     setOtpDevHint("");
   };
 
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     if (!otpReq) return;
-    const code = sendOtp(otpReq.phone);
-    setOtpDevHint(code);
+    const res = await sendOtpSms(otpReq.phone, "edit_request");
+    if (!res.ok) {
+      toast.error(res.error || "Failed to send OTP");
+      return;
+    }
+    setOtpDevHint("");
     setOtpStage("verify");
     toast.success(`OTP sent to ${maskPhone(otpReq.phone)}`);
   };
