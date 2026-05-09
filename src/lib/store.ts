@@ -188,7 +188,7 @@ export function sendOtp(phone: string): string {
   return code;
 }
 
-export async function sendOtpSms(phone: string, purpose: "signin" | "edit_request"): Promise<{ ok: boolean; error?: string }> {
+export async function sendOtpSms(phone: string, purpose: "signin" | "edit_request"): Promise<{ ok: boolean; code: string; error?: string }> {
   const code = sendOtp(phone);
   try {
     const { supabase } = await import("@/integrations/supabase/client");
@@ -196,11 +196,11 @@ export async function sendOtpSms(phone: string, purpose: "signin" | "edit_reques
       body: { phone: normalizePhone(phone), code, purpose },
     });
     if (error || (data && (data as { error?: string }).error)) {
-      return { ok: false, error: error?.message || (data as { error?: string }).error || "Failed to send SMS" };
+      return { ok: false, code, error: error?.message || (data as { error?: string }).error || "Failed to send OTP" };
     }
-    return { ok: true };
+    return { ok: true, code };
   } catch (e) {
-    return { ok: false, error: (e as Error).message };
+    return { ok: false, code, error: (e as Error).message };
   }
 }
 
