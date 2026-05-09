@@ -43,12 +43,6 @@ export default function Register() {
   const [signinPhone, setSigninPhone] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // OTP for sign-in
-  const [otpStage, setOtpStage] = useState<"idle" | "verify">("idle");
-  const [otpCode, setOtpCode] = useState("");
-  const [otpDevHint, setOtpDevHint] = useState("");
-  const [pendingDonor, setPendingDonor] = useState<Donor | null>(null);
-
   // Update last donated dialog
   const [editOpen, setEditOpen] = useState(false);
   const [newLastDonated, setNewLastDonated] = useState("");
@@ -104,32 +98,10 @@ export default function Register() {
       setMode("register");
       return;
     }
-    // Send OTP
-    const res = await sendOtpSms(phoneDigits, "signin");
-    if (!res.ok) {
-      toast.error(res.error || "Failed to send OTP");
-      return;
-    }
-    setOtpDevHint(res.code);
-    setPendingDonor(found);
-    setOtpStage("verify");
-    toast.success(`OTP sent to ${maskPhone(phoneDigits)}`);
-  };
-
-  const handleVerifySigninOtp = () => {
-    if (!pendingDonor) return;
-    if (!verifyOtp(pendingDonor.phone, otpCode)) {
-      toast.error("Invalid or expired OTP");
-      return;
-    }
-    setSignedInPhone(pendingDonor.phone);
-    setDonor(pendingDonor);
+    setSignedInPhone(found.phone);
+    setDonor(found);
     setMode("profile");
-    setOtpStage("idle");
-    setOtpCode("");
-    setOtpDevHint("");
-    setPendingDonor(null);
-    toast.success(`Welcome back, ${pendingDonor.fullName}!`);
+    toast.success(`Welcome back, ${found.fullName}!`);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -313,42 +285,6 @@ export default function Register() {
             Enter your registered phone number to access your donor profile.
           </p>
 
-          {otpStage === "verify" && pendingDonor ? (
-            <div className="mt-8 space-y-4 rounded-xl border bg-card p-6 shadow-sm">
-              <p className="text-sm text-muted-foreground">
-                We sent a 6-digit verification code to {maskPhone(pendingDonor.phone)}.
-              </p>
-              {null}
-              <div>
-                <Label htmlFor="otp">OTP Code</Label>
-                <Input
-                  id="otp"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  placeholder="123456"
-                  className="mt-1 tracking-widest"
-                />
-              </div>
-              <Button onClick={handleVerifySigninOtp} className="w-full" size="lg">
-                Verify & Sign In
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => {
-                  setOtpStage("idle");
-                  setOtpCode("");
-                  setOtpDevHint("");
-                  setPendingDonor(null);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
           <form
             onSubmit={handleSignIn}
             className="mt-8 space-y-5 rounded-xl border bg-card p-6 shadow-sm"
@@ -366,7 +302,7 @@ export default function Register() {
               />
             </div>
             <Button type="submit" className="w-full" size="lg">
-              Send OTP
+              Sign In
             </Button>
 
             <div className="flex items-center gap-2 pt-2 text-center text-sm text-muted-foreground">
@@ -387,7 +323,6 @@ export default function Register() {
               <UserPlus className="mr-1 h-4 w-4" /> Register as New Donor
             </Button>
           </form>
-          )}
         </div>
       </div>
     );
