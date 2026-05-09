@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export interface Donor {
   id: string;
   fullName: string;
@@ -32,8 +34,6 @@ export interface BloodRequest {
   donatedDate?: string;
 }
 
-const DONORS_KEY = "bloodbank_donors";
-const REQUESTS_KEY = "bloodbank_requests";
 const ADMIN_KEY = "bloodbank_admin";
 const SIGNED_IN_KEY = "bloodbank_donor_phone";
 
@@ -47,90 +47,220 @@ export function clearSignedInPhone(): void {
   localStorage.removeItem(SIGNED_IN_KEY);
 }
 
-function readArr<T>(key: string): T[] {
-  try {
-    return JSON.parse(localStorage.getItem(key) || "[]") as T[];
-  } catch {
-    return [];
-  }
-}
-function writeArr<T>(key: string, value: T[]) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
 export function normalizePhone(p: string): string {
   return (p || "").replace(/\D/g, "");
 }
 
+// Convert Supabase row to Donor interface
+function rowToDonor(row: Record<string, unknown>): Donor {
+  return {
+    id: row.id,
+    fullName: row.full_name,
+    gender: row.gender,
+    department: row.department,
+    year: row.year,
+    bloodGroup: row.blood_group,
+    lastDonated: row.last_donated,
+    address: row.address,
+    phone: row.phone,
+    createdAt: row.created_at,
+  };
+}
+
+// Convert Donor interface to Supabase insert/update format
+function donorToRow(donor: Omit<Donor, "id" | "createdAt">) {
+  return {
+    full_name: donor.fullName,
+    gender: donor.gender,
+    department: donor.department,
+    year: donor.year,
+    blood_group: donor.bloodGroup,
+    last_donated: donor.lastDonated,
+    address: donor.address,
+    phone: donor.phone,
+  };
+}
+
+// Convert Supabase row to BloodRequest interface
+function rowToBloodRequest(row: Record<string, unknown>): BloodRequest {
+  return {
+    id: row.id,
+    requesterName: row.requester_name,
+    bloodGroup: row.blood_group,
+    phone: row.phone,
+    urgency: row.urgency,
+    hospitalName: row.hospital_name,
+    hospitalLocation: row.hospital_location,
+    createdAt: row.created_at,
+    donated: row.donated ?? false,
+    donatedDate: row.donated_date ?? "",
+  };
+}
+
+// Convert BloodRequest to Supabase insert/update format
+function bloodRequestToRow(req: Omit<BloodRequest, "id" | "createdAt">) {
+  return {
+    requester_name: req.requesterName,
+    blood_group: req.bloodGroup,
+    phone: req.phone,
+    urgency: req.urgency,
+    hospital_name: req.hospitalName,
+    hospital_location: req.hospitalLocation,
+    donated: req.donated ?? false,
+    donated_date: req.donatedDate ?? "",
+  };
+}
+
 // ===== Donors =====
 export async function getDonors(): Promise<Donor[]> {
-  return readArr<Donor>(DONORS_KEY).sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  const { data, error } = await supabase
+    .from("donors")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching donors:", error);
+    return [];
+  }
+
+  return (data || []).map(rowToDonor);
 }
 
 export async function getDonorByPhone(phone: string): Promise<Donor | null> {
   const target = normalizePhone(phone);
-  const donors = readArr<Donor>(DONORS_KEY);
-  return donors.find((d) => normalizePhone(d.phone) === target) || null;
+  const { data, error } = await supabase
+    .from("donors")
+    .select("*")
+    .eq("phone", target)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("Error fetching donor by phone:", error);
+  }
+
+  return data ? rowToDonor(data) : null;
 }
 
 export async function saveDonor(donor: Omit<Donor, "id" | "createdAt">): Promise<Donor> {
-  const donors = readArr<Donor>(DONORS_KEY);
   const target = normalizePhone(donor.phone);
-  if (donors.some((d) => normalizePhone(d.phone) === target)) {
+  
+  // Check if phone already exists
+  const existing = await getDonorByPhone(target);
+  if (existing) {
     throw new Error("This phone number is already registered as a donor.");
   }
-  const newDonor: Donor = { ...donor, id: uid(), createdAt: new Date().toISOString() };
-  donors.push(newDonor);
-  writeArr(DONORS_KEY, donors);
-  return newDonor;
+
+  const { data, error } = await supabase
+    .from("donors")
+    .insert([donorToRow(donor)])
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || "Failed to save donor");
+  }
+
+  return rowToDonor(data);
 }
 
 export async function updateDonor(id: string, donor: Omit<Donor, "id" | "createdAt">): Promise<void> {
-  const donors = readArr<Donor>(DONORS_KEY);
-  const idx = donors.findIndex((d) => d.id === id);
-  if (idx === -1) return;
-  donors[idx] = { ...donors[idx], ...donor };
-  writeArr(DONORS_KEY, donors);
+  const { error } = await supabase
+    .from("donors")
+    .update(donorToRow(donor))
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating donor:", error);
+    throw new Error(error.message || "Failed to update donor");
+  }
 }
 
 export async function updateDonorLastDonated(id: string, lastDonated: string): Promise<void> {
-  const donors = readArr<Donor>(DONORS_KEY);
-  const idx = donors.findIndex((d) => d.id === id);
-  if (idx === -1) return;
-  donors[idx].lastDonated = lastDonated;
-  writeArr(DONORS_KEY, donors);
+  const { error } = await supabase
+    .from("donors")
+    .update({ last_donated: lastDonated })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating donor last donated:", error);
+    throw new Error(error.message || "Failed to update last donated date");
+  }
 }
 
 export async function deleteDonor(id: string): Promise<void> {
-  writeArr(DONORS_KEY, readArr<Donor>(DONORS_KEY).filter((d) => d.id !== id));
+  const { error } = await supabase
+    .from("donors")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting donor:", error);
+    throw new Error(error.message || "Failed to delete donor");
+  }
 }
 
 // ===== Blood Requests =====
 export async function getRequests(): Promise<BloodRequest[]> {
-  return readArr<BloodRequest>(REQUESTS_KEY).sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  const { data, error } = await supabase
+    .from("blood_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching blood requests:", error);
+    return [];
+  }
+
+  return (data || []).map(rowToBloodRequest);
 }
 
 export async function saveRequest(req: Omit<BloodRequest, "id" | "createdAt">): Promise<BloodRequest> {
-  const requests = readArr<BloodRequest>(REQUESTS_KEY);
-  const newReq: BloodRequest = { ...req, id: uid(), createdAt: new Date().toISOString(), donated: req.donated ?? false, donatedDate: req.donatedDate ?? "" };
-  requests.push(newReq);
-  writeArr(REQUESTS_KEY, requests);
-  return newReq;
+  const { data, error } = await supabase
+    .from("blood_requests")
+    .insert([bloodRequestToRow(req)])
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || "Failed to save blood request");
+  }
+
+  return rowToBloodRequest(data);
 }
 
 export async function updateRequest(id: string, patch: Partial<Omit<BloodRequest, "id" | "createdAt">>): Promise<void> {
-  const requests = readArr<BloodRequest>(REQUESTS_KEY);
-  const idx = requests.findIndex((r) => r.id === id);
-  if (idx === -1) return;
-  requests[idx] = { ...requests[idx], ...patch };
-  writeArr(REQUESTS_KEY, requests);
+  // Convert camelCase patch to snake_case
+  const updateData: Record<string, unknown> = {};
+  if (patch.requesterName !== undefined) updateData.requester_name = patch.requesterName;
+  if (patch.bloodGroup !== undefined) updateData.blood_group = patch.bloodGroup;
+  if (patch.phone !== undefined) updateData.phone = patch.phone;
+  if (patch.urgency !== undefined) updateData.urgency = patch.urgency;
+  if (patch.hospitalName !== undefined) updateData.hospital_name = patch.hospitalName;
+  if (patch.hospitalLocation !== undefined) updateData.hospital_location = patch.hospitalLocation;
+  if (patch.donated !== undefined) updateData.donated = patch.donated;
+  if (patch.donatedDate !== undefined) updateData.donated_date = patch.donatedDate;
+
+  const { error } = await supabase
+    .from("blood_requests")
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating blood request:", error);
+    throw new Error(error.message || "Failed to update blood request");
+  }
 }
 
 export async function deleteRequest(id: string): Promise<void> {
-  writeArr(REQUESTS_KEY, readArr<BloodRequest>(REQUESTS_KEY).filter((r) => r.id !== id));
+  const { error } = await supabase
+    .from("blood_requests")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting blood request:", error);
+    throw new Error(error.message || "Failed to delete blood request");
+  }
 }
 
 export async function markRequestDonated(id: string, donatedDate: string): Promise<void> {
@@ -191,7 +321,6 @@ export function sendOtp(phone: string): string {
 export async function sendOtpSms(phone: string, purpose: "signin" | "edit_request"): Promise<{ ok: boolean; code: string; error?: string }> {
   const code = sendOtp(phone);
   try {
-    const { supabase } = await import("@/integrations/supabase/client");
     const { data, error } = await supabase.functions.invoke("send-otp", {
       body: { phone: normalizePhone(phone), code, purpose },
     });

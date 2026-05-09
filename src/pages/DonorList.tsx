@@ -61,14 +61,6 @@ export default function DonorList() {
     }
   };
 
-  useEffect(() => {
-    if (admin) refresh();
-  }, [admin]);
-
-  if (!admin) {
-    return <Navigate to="/" replace />;
-  }
-
   const cities = useMemo(() => {
     const citySet = new Set<string>();
     donors.forEach((d) => {
@@ -85,6 +77,14 @@ export default function DonorList() {
       return matchBG && matchCity;
     });
   }, [donors, filterBG, sortCity]);
+
+  useEffect(() => {
+    if (admin) refresh();
+  }, [admin]);
+
+  if (!admin) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleDelete = async (id: string) => {
     await deleteDonor(id);
