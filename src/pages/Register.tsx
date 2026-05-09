@@ -104,13 +104,13 @@ export default function Register() {
       setMode("register");
       return;
     }
-    // Send OTP via SMS
+    // Send OTP
     const res = await sendOtpSms(phoneDigits, "signin");
     if (!res.ok) {
       toast.error(res.error || "Failed to send OTP");
       return;
     }
-    setOtpDevHint("");
+    setOtpDevHint(res.code);
     setPendingDonor(found);
     setOtpStage("verify");
     toast.success(`OTP sent to ${maskPhone(phoneDigits)}`);
