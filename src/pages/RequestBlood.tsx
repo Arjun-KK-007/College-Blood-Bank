@@ -148,7 +148,7 @@ export default function RequestBlood() {
       toast.error(res.error || "Failed to send OTP");
       return;
     }
-    setOtpDevHint("");
+    setOtpDevHint(res.code);
     setOtpStage("verify");
     toast.success(`OTP sent to ${maskPhone(otpReq.phone)}`);
   };
