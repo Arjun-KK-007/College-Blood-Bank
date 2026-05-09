@@ -21,7 +21,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    const to = digits.startsWith("91") ? `+${digits}` : `+91${digits}`;
+    const phoneE164 = digits.startsWith("91") ? `+${digits}` : `+91${digits}`;
+    const to = `whatsapp:${phoneE164}`;
+    const fromWa = from.startsWith("whatsapp:") ? from : `whatsapp:${from}`;
     const body = purpose === "edit_request"
       ? `The OTP for editing the blood request is ${code}. Valid for 5 minutes.`
       : `Your Blood Bank verification code is ${code}. Valid for 5 minutes.`;
@@ -33,7 +35,7 @@ Deno.serve(async (req) => {
         "Authorization": `Basic ${auth}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({ To: to, From: from, Body: body }).toString(),
+      body: new URLSearchParams({ To: to, From: fromWa, Body: body }).toString(),
     });
 
     const data = await res.json();
