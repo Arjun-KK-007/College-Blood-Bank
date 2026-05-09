@@ -29,9 +29,6 @@ import {
   setSignedInPhone,
   clearSignedInPhone,
   updateDonorLastDonated,
-  sendOtpSms,
-  verifyOtp,
-  maskPhone,
   type Donor,
 } from "@/lib/store";
 
