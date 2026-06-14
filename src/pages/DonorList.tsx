@@ -139,7 +139,7 @@ export default function DonorList() {
         {/* Filters */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select value={filterBG} onValueChange={setFilterBG}>
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by blood group">
               <SelectValue placeholder="Blood Group" />
             </SelectTrigger>
             <SelectContent>
@@ -148,7 +148,7 @@ export default function DonorList() {
             </SelectContent>
           </Select>
           <Select value={sortCity} onValueChange={setSortCity}>
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by city">
               <SelectValue placeholder="City" />
             </SelectTrigger>
             <SelectContent>
