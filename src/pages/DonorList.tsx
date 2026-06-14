@@ -206,15 +206,15 @@ export default function DonorList() {
                       <TableCell className="hidden md:table-cell">{d.phone}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => openUpdateDate(d)} title="Update last donation date">
+                          <Button size="icon" variant="ghost" onClick={() => openUpdateDate(d)} title="Update last donation date" aria-label="Update last donation date">
                             <CalendarDays className="h-4 w-4" />
                           </Button>
                           {admin && (
                             <>
-                              <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
+                              <Button size="icon" variant="ghost" onClick={() => openEdit(d)} aria-label="Edit donor">
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
+                              <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive" aria-label="Delete donor">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </>
