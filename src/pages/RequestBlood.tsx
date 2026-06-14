@@ -195,6 +195,11 @@ export default function RequestBlood() {
 
   return (
     <div className="gradient-soft min-h-[80vh] py-12">
+      <Seo
+        title="Request Blood — College Blood Bank"
+        description="Post an urgent blood request, browse open requests by blood group and hospital, and connect with student donors on campus."
+        path="/request"
+      />
       <div className="container mx-auto max-w-4xl px-4">
         <h1 className="font-display text-3xl font-bold text-foreground">Request Blood</h1>
         <p className="mt-2 text-muted-foreground">Need a specific blood group? Submit a request and we'll help connect you.</p>
