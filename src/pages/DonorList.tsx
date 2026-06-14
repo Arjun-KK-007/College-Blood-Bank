@@ -133,6 +133,11 @@ export default function DonorList() {
 
   return (
     <div className="gradient-soft min-h-[80vh] py-12">
+      <Seo
+        title="Donor List — College Blood Bank Admin"
+        description="Admin-only directory of registered student blood donors with filters by blood group and city."
+        path="/donors"
+      />
       <div className="container mx-auto px-4">
         <h1 className="font-display text-3xl font-bold text-foreground">Donor List</h1>
         <p className="mt-2 text-muted-foreground">Browse all registered blood donors.</p>
