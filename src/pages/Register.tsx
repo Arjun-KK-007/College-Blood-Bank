@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LogOut, Pencil, UserPlus } from "lucide-react";
+import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -328,6 +329,11 @@ export default function Register() {
   // ===== Register View =====
   return (
     <div className="gradient-soft min-h-[80vh] py-12">
+      <Seo
+        title="Sign In or Register as a Blood Donor — College Blood Bank"
+        description="Sign in by phone or register as a new student blood donor. Quick 10-digit phone lookup, no OTP required."
+        path="/register"
+      />
       <div className="container mx-auto max-w-lg px-4">
         <div className="flex items-center justify-between">
           <div>

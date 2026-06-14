@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Seo from "@/components/Seo";
 import { loginAdmin, isAdmin } from "@/lib/store";
 import { Shield } from "lucide-react";
 
@@ -32,6 +33,11 @@ export default function Admin() {
 
   return (
     <div className="gradient-soft flex min-h-[80vh] items-center justify-center py-12">
+      <Seo
+        title="Admin Login — College Blood Bank"
+        description="Restricted admin sign-in for managing the campus blood bank donor list."
+        path="/admin"
+      />
       <div className="w-full max-w-sm px-4">
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="mb-6 flex flex-col items-center text-center">

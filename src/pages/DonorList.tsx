@@ -8,6 +8,7 @@ import { Pencil, Trash2, CalendarDays } from "lucide-react";
 import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, GENDERS, type Donor } from "@/lib/store";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Seo from "@/components/Seo";
 import { Label } from "@/components/ui/label";
 
 function formatDate(dateStr: string): string {
@@ -132,6 +133,11 @@ export default function DonorList() {
 
   return (
     <div className="gradient-soft min-h-[80vh] py-12">
+      <Seo
+        title="Donor List — College Blood Bank Admin"
+        description="Admin-only directory of registered student blood donors with filters by blood group and city."
+        path="/donors"
+      />
       <div className="container mx-auto px-4">
         <h1 className="font-display text-3xl font-bold text-foreground">Donor List</h1>
         <p className="mt-2 text-muted-foreground">Browse all registered blood donors.</p>
@@ -139,7 +145,7 @@ export default function DonorList() {
         {/* Filters */}
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select value={filterBG} onValueChange={setFilterBG}>
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by blood group">
               <SelectValue placeholder="Blood Group" />
             </SelectTrigger>
             <SelectContent>
@@ -148,7 +154,7 @@ export default function DonorList() {
             </SelectContent>
           </Select>
           <Select value={sortCity} onValueChange={setSortCity}>
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-44" aria-label="Filter by city">
               <SelectValue placeholder="City" />
             </SelectTrigger>
             <SelectContent>
@@ -206,15 +212,15 @@ export default function DonorList() {
                       <TableCell className="hidden md:table-cell">{d.phone}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => openUpdateDate(d)} title="Update last donation date">
+                          <Button size="icon" variant="ghost" onClick={() => openUpdateDate(d)} title="Update last donation date" aria-label="Update last donation date">
                             <CalendarDays className="h-4 w-4" />
                           </Button>
                           {admin && (
                             <>
-                              <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
+                              <Button size="icon" variant="ghost" onClick={() => openEdit(d)} aria-label="Edit donor">
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive">
+                              <Button size="icon" variant="ghost" onClick={() => handleDelete(d.id)} className="text-destructive hover:text-destructive" aria-label="Delete donor">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </>

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, getDonorCity, type Donor, type BloodRequest } from "@/lib/store";
 import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import Seo from "@/components/Seo";
 
 function cleanPhone(phone: string): string {
   return phone.replace(/[\s\-()]/g, "");
@@ -194,6 +195,11 @@ export default function RequestBlood() {
 
   return (
     <div className="gradient-soft min-h-[80vh] py-12">
+      <Seo
+        title="Request Blood — College Blood Bank"
+        description="Post an urgent blood request, browse open requests by blood group and hospital, and connect with student donors on campus."
+        path="/request"
+      />
       <div className="container mx-auto max-w-4xl px-4">
         <h1 className="font-display text-3xl font-bold text-foreground">Request Blood</h1>
         <p className="mt-2 text-muted-foreground">Need a specific blood group? Submit a request and we'll help connect you.</p>
@@ -268,12 +274,12 @@ export default function RequestBlood() {
                             </Button>
                           )}
                           {!r.donated && (
-                            <Button size="icon" variant="ghost" onClick={() => openEdit(r)} className="h-8 w-8" title="Edit request">
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(r)} className="h-8 w-8" title="Edit request" aria-label="Edit blood request">
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
                           {admin && (
-                            <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8" aria-label="Delete blood request">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}

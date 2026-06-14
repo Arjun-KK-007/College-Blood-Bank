@@ -1,0 +1,9 @@
+# College Blood Bank
+
+> A campus blood bank directory where students can register as donors, find matching donors by blood group, and post or update blood requests for fellow students.
+
+## Pages
+
+- [Home](/): Overview of the campus blood bank with donor stats and quick actions.
+- [Register as Donor](/register): Sign in by phone or register as a new student donor.
+- [Request Blood](/request): Post a blood request and browse open requests by blood group, urgency, and hospital.

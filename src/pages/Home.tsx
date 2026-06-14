@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Heart, Users, Droplets, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Seo from "@/components/Seo";
 import { getDonors } from "@/lib/store";
 
 
@@ -17,6 +18,11 @@ export default function Home() {
   ];
   return (
     <div className="flex flex-col">
+      <Seo
+        title="College Blood Bank — Donate Blood, Save Lives"
+        description="Campus blood bank: register as a student donor, find donors by blood group, and post urgent blood requests in minutes."
+        path="/"
+      />
       {/* Hero */}
       <section className="gradient-hero relative overflow-hidden px-4 py-24 pb-32 text-center md:py-32 md:pb-40">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent_60%)]" />
