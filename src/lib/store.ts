@@ -82,7 +82,7 @@ function donorToRow(donor: Omit<Donor, "id" | "createdAt">) {
 }
 
 // Convert Supabase row to BloodRequest interface
-function rowToBloodRequest(row: Record<string, unknown>): BloodRequest {
+function rowToBloodRequest(row: any): BloodRequest {
   return {
     id: row.id,
     requesterName: row.requester_name,
