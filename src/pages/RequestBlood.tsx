@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BLOOD_GROUPS, saveRequest, getRequests, deleteRequest, markRequestDonated, isAdmin, getDonors, updateRequest, getDonorCity, type Donor, type BloodRequest } from "@/lib/store";
 import { Trash2, AlertTriangle, MessageSquare, Phone, CheckCircle2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import Seo from "@/components/Seo";
 
 function cleanPhone(phone: string): string {
   return phone.replace(/[\s\-()]/g, "");
