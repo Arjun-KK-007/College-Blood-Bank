@@ -8,6 +8,7 @@ import { Pencil, Trash2, CalendarDays } from "lucide-react";
 import { getDonors, deleteDonor, updateDonor, isAdmin, BLOOD_GROUPS, DEPARTMENTS, YEARS, GENDERS, type Donor } from "@/lib/store";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Seo from "@/components/Seo";
 import { Label } from "@/components/ui/label";
 
 function formatDate(dateStr: string): string {
