@@ -230,7 +230,7 @@ export async function saveRequest(req: Omit<BloodRequest, "id" | "createdAt">): 
 
 export async function updateRequest(id: string, patch: Partial<Omit<BloodRequest, "id" | "createdAt">>): Promise<void> {
   // Convert camelCase patch to snake_case
-  const updateData: Record<string, unknown> = {};
+  const updateData: any = {};
   if (patch.requesterName !== undefined) updateData.requester_name = patch.requesterName;
   if (patch.bloodGroup !== undefined) updateData.blood_group = patch.bloodGroup;
   if (patch.phone !== undefined) updateData.phone = patch.phone;
