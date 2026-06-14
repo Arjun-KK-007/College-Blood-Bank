@@ -52,7 +52,7 @@ export function normalizePhone(p: string): string {
 }
 
 // Convert Supabase row to Donor interface
-function rowToDonor(row: Record<string, unknown>): Donor {
+function rowToDonor(row: any): Donor {
   return {
     id: row.id,
     fullName: row.full_name,
