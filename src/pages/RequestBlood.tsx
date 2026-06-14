@@ -268,12 +268,12 @@ export default function RequestBlood() {
                             </Button>
                           )}
                           {!r.donated && (
-                            <Button size="icon" variant="ghost" onClick={() => openEdit(r)} className="h-8 w-8" title="Edit request">
+                            <Button size="icon" variant="ghost" onClick={() => openEdit(r)} className="h-8 w-8" title="Edit request" aria-label="Edit blood request">
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
                           {admin && (
-                            <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8">
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(r.id)} className="text-destructive hover:text-destructive h-8 w-8" aria-label="Delete blood request">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           )}
