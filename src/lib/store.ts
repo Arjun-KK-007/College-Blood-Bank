@@ -307,32 +307,9 @@ export function logoutAdmin(): void {
   localStorage.removeItem(ADMIN_KEY);
 }
 
-// ===== OTP (demo: code shown to user, simulating SMS) =====
+// ===== OTP (legacy, retained for compatibility) =====
 const OTP_KEY = "bloodbank_otp";
 interface OtpRecord { phone: string; code: string; expiresAt: number; }
-
-export function sendOtp(phone: string): string {
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  const record: OtpRecord = { phone: normalizePhone(phone), code, expiresAt: Date.now() + 5 * 60 * 1000 };
-  localStorage.setItem(OTP_KEY, JSON.stringify(record));
-  return code;
-}
-
-export async function sendOtpSms(phone: string, purpose: "signin" | "edit_request"): Promise<{ ok: boolean; code: string; error?: string }> {
-  const code = sendOtp(phone);
-  try {
-    const { data, error } = await supabase.functions.invoke("send-otp", {
-      body: { phone: normalizePhone(phone), code, purpose },
-    });
-    if (error || (data && (data as { error?: string }).error)) {
-      return { ok: false, code, error: error?.message || (data as { error?: string }).error || "Failed to send OTP" };
-    }
-    return { ok: true, code };
-  } catch (e) {
-    return { ok: false, code, error: (e as Error).message };
-  }
-}
-
 
 export function verifyOtp(phone: string, code: string): boolean {
   try {
